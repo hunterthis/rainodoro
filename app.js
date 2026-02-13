@@ -609,7 +609,13 @@ function onPomodoroFinished(finishedDuration, mode){
 }
 
 // update tick to call onPomodoroFinished when finishing a pomodoro
-function tick(){ if(remaining<=0){ clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; $status.textContent='Finished'; setRainVolume(0); onPomodoroFinished(undefined, currentMode); return; } remaining--; updateDisplay(); saveTimerState(); }
+function tick(){
+  try{ console.debug('tick: remaining before', remaining, 'isRunning', isRunning); }catch(e){}
+  if(remaining<=0){ clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; $status.textContent='Finished'; setRainVolume(0); onPomodoroFinished(undefined, currentMode); return; }
+  remaining--;
+  try{ console.debug('tick: remaining after', remaining); }catch(e){}
+  updateDisplay(); saveTimerState();
+}
 
 // initial load
 loadTimerState();
