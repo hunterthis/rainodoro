@@ -159,6 +159,17 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .info-section{max-width:100%;padding:10px}
   /* ensure side lists are visible above the fold where possible */
   .sidebar .section{padding:8px}
+  /* Make bucket participate in layout (not absolutely positioned) to avoid occluding content */
+  .bucket-wrap{position:relative;display:block;height:auto}
+  .bucket{position:static;left:auto;right:auto;bottom:auto;margin:0 auto;z-index:0;width:100%;max-width:var(--bucket-max-width);height:auto}
+  .bucket::after{display:none}
+  .water{position:relative;height:38vw;max-height:220px}
+  /* ensure side chrome sits above the bucket */
+  .sidepanel,.sidebar{position:relative;z-index:5}
+  /* center and full-width bottom controls */
+  .timer-compact .buttons{align-items:stretch}
+  .timer-compact .buttons button{width:100%;box-sizing:border-box}
+  .timer-compact .buttons{margin-top:6px}
 }
 
 /* Ultra Focus Mode: allow larger bucket and hide side chrome */
