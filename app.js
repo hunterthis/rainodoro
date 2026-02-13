@@ -66,11 +66,22 @@ function initAudio(){
 }
 function setRainVolume(scale){ if(!rainGain || !audioCtx) return; const v = (scale||0) * masterVolume; rainGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); }
 
+// Water animation effects
+function createRipple(){ const water = document.getElementById('water'); if(!water) return; const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 20 + 10; const left = Math.random() * 100; const top = Math.random() * 100; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; water.appendChild(ripple); setTimeout(() => ripple.remove(), 800); }
+
+function createBubble(){ const water = document.getElementById('water'); if(!water) return; const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 4 + 2; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '5%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; water.appendChild(bubble); setTimeout(() => bubble.remove(), 2000); }
+
 // Pour sound using WebAudio
 function playPourSound(){ if(!audioCtx) initAudio(); const ctx = audioCtx; const now = ctx.currentTime; const osc = ctx.createOscillator(); const gain = ctx.createGain(); const filter = ctx.createBiquadFilter(); osc.frequency.setValueAtTime(150,now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); filter.type='lowpass'; filter.frequency.value=800; osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.3); osc.start(now); osc.stop(now+0.3); }
 
 function formatTime(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${ss.toString().padStart(2,'0')}` }
+let previousWaterHeight = 0;
 function updateDisplay(){ $time.textContent = formatTime(remaining); const pct = 100*(1 - remaining/duration); $water.style.height = pct + '%';
+  // create ripple when water level changes significantly
+  if(isRunning && Math.abs(pct - previousWaterHeight) > 0.5){ createRipple(); }
+  // create bubbles as water fills
+  if(isRunning && pct > 10 && Math.random() > 0.7){ createBubble(); }
+  previousWaterHeight = pct;
   // update pour button state
   const pourBtn = document.getElementById('pourBtn');
   if(pourBtn){ if(pct >= 99 || remaining <= 0){ pourBtn.disabled = false; } else { pourBtn.disabled = true; } }
