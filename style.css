@@ -202,7 +202,8 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .bucket{position:static !important;left:auto !important;right:auto !important;bottom:auto !important;margin:0 auto !important;z-index:0 !important;width:100% !important;max-width:100% !important;height:auto !important;border-width:6px !important}
   .bucket::after{display:none !important}
   .water{position:relative !important;height:40vw !important;max-height:250px !important}
-  .sidepanel, .sidebar{position:relative !important;z-index:5 !important;width:100% !important;display:block !important;margin:0 !important;padding:6px !important}
+  /* bring UI above bucket so touches reach controls */
+  .sidepanel, .sidebar{position:relative !important;z-index:60 !important;width:100% !important;display:block !important;margin:0 !important;padding:6px !important}
   .timer-compact{width:100% !important;padding:10px !important;box-sizing:border-box}
   .timer-compact #time{font-size:34px !important;text-align:center !important}
   .timer-compact .buttons{display:flex !important;flex-direction:column !important;gap:10px !important}
@@ -211,6 +212,11 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .section form{flex-direction:column !important}
   .section input{width:100% !important}
   .task-list, .break-list, .completed-list{max-height:260px !important;overflow:auto !important;width:100% !important}
+  /* make list items and buttons definitely on top and interactive */
+  .task-list li, .break-list li, .completed-list li{position:relative !important;z-index:70 !important}
+  .task-actions button, .section button{position:relative !important;z-index:80 !important;pointer-events:auto !important}
+  /* disable pointer events on decorative/animated bucket elements so they don't block touches */
+  .bucket, .bucket * , .water, .rain-overlay, .raindrop, .ripple, .bubble{pointer-events:none !important}
   #pomoStatsPanel{width:100% !important}
   .controls .settings{display:none !important}
 }
