@@ -145,3 +145,6 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 .app.focus-mode .reset-pour-btn{
   display: none !important;
 }
+
+/* hide info button in Ultra Focus Mode */
+.app.focus-mode #infoToggle{ display:none !important; }
