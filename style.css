@@ -194,3 +194,23 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 
 /* hide info button in Ultra Focus Mode */
 .app.focus-mode #infoToggle{ display:none !important; }
+
+/* Strong mobile single-column override to ensure no overlap */
+@media (max-width:420px){
+  .visual{display:block !important;margin:0 !important;padding:0 !important}
+  .bucket-wrap{display:block !important;position:relative !important;width:100% !important;max-width:94vw !important;height:auto !important;margin:6px auto !important}
+  .bucket{position:static !important;left:auto !important;right:auto !important;bottom:auto !important;margin:0 auto !important;z-index:0 !important;width:100% !important;max-width:100% !important;height:auto !important;border-width:6px !important}
+  .bucket::after{display:none !important}
+  .water{position:relative !important;height:40vw !important;max-height:250px !important}
+  .sidepanel, .sidebar{position:relative !important;z-index:5 !important;width:100% !important;display:block !important;margin:0 !important;padding:6px !important}
+  .timer-compact{width:100% !important;padding:10px !important;box-sizing:border-box}
+  .timer-compact #time{font-size:34px !important;text-align:center !important}
+  .timer-compact .buttons{display:flex !important;flex-direction:column !important;gap:10px !important}
+  .timer-compact .buttons button{width:100% !important;padding:12px !important}
+  .active-task{display:block !important;font-size:18px !important;padding:10px !important}
+  .section form{flex-direction:column !important}
+  .section input{width:100% !important}
+  .task-list, .break-list, .completed-list{max-height:260px !important;overflow:auto !important;width:100% !important}
+  #pomoStatsPanel{width:100% !important}
+  .controls .settings{display:none !important}
+}
