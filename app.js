@@ -77,10 +77,10 @@ function playPourSound(){ if(!audioCtx) initAudio(); const ctx = audioCtx; const
 function formatTime(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${ss.toString().padStart(2,'0')}` }
 let previousWaterHeight = 0;
 function updateDisplay(){ $time.textContent = formatTime(remaining); const pct = 100*(1 - remaining/duration); $water.style.height = pct + '%';
-  // create ripple when water level changes significantly
-  if(isRunning && Math.abs(pct - previousWaterHeight) > 0.5){ createRipple(); }
-  // create bubbles as water fills
-  if(isRunning && pct > 10 && Math.random() > 0.7){ createBubble(); }
+  // create ripple when water level changes
+  if(isRunning && Math.abs(pct - previousWaterHeight) > 0.3){ createRipple(); }
+  // create bubbles as water fills (more frequently for visibility)
+  if(isRunning && pct > 10 && Math.random() > 0.5){ createBubble(); }
   previousWaterHeight = pct;
   // update pour button state
   const pourBtn = document.getElementById('pourBtn');
