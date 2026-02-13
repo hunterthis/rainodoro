@@ -108,7 +108,7 @@ h1{margin:0;font-size:28px}
 .rain-overlay{position:absolute;inset:0;pointer-events:none}
 .ripple{position:absolute;border:2px solid rgba(255,255,255,0.8);border-radius:50%;pointer-events:none;box-shadow:0 0 10px rgba(255,255,255,0.6), inset 0 0 6px rgba(255,255,255,0.4)}
 .bubble{position:absolute;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,1),rgba(150,200,255,0.3));border-radius:50%;pointer-events:none;border:1.5px solid rgba(255,255,255,0.6);box-shadow:0 0 8px rgba(255,255,255,0.5), inset -1px -1px 3px rgba(0,0,0,0.2)}
-.status{color:var(--muted);margin-left:8px}
+.status{display:none}
 footer{margin-top:18px;color:var(--muted);font-size:12px}
 
 /* water animations */
