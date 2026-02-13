@@ -133,6 +133,35 @@ function loadTimerState(){
 // Task & break persistence and UI
 function loadTasks(){ try{ const raw = localStorage.getItem(TASKS_KEY); tasks = raw ? JSON.parse(raw) : []; activeTaskId = tasks.find(t=>t.isActive)?.id || null; }catch(e){ tasks=[] } renderTasks(); }
 function saveTasks(){ localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
+function hasSortable(){ return typeof Sortable !== 'undefined'; }
+function reorderFromDom(listType, listEl){
+  const list = getListByType(listType);
+  if(!list) return;
+  const ids = Array.from(listEl.children).map(li=>li.dataset.id);
+  if(ids.length === 0) return;
+  const map = new Map(list.map(item=>[item.id, item]));
+  const reordered = ids.map(id=>map.get(id)).filter(Boolean);
+  list.forEach(item=>{ if(!ids.includes(item.id)) reordered.push(item); });
+  if(listType === 'tasks'){ tasks = reordered; saveTasks(); renderTasks(); }
+  else if(listType === 'shortBreaks'){ breaks.short = reordered; saveBreaks(); renderBreaks(); }
+  else if(listType === 'longBreaks'){ breaks.long = reordered; saveBreaks(); renderBreaks(); }
+  updateActiveTaskDisplay();
+}
+function setupSortable(){
+  if(!hasSortable()) return;
+  Sortable.create($taskList, {
+    animation: 150,
+    onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('tasks', $taskList); }
+  });
+  Sortable.create($shortBreakList, {
+    animation: 150,
+    onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('shortBreaks', $shortBreakList); }
+  });
+  Sortable.create($longBreakList, {
+    animation: 150,
+    onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('longBreaks', $longBreakList); }
+  });
+}
 function getDragData(event){
   try{ return JSON.parse(event.dataTransfer.getData('text/plain')); }
   catch(e){ return null; }
@@ -155,6 +184,7 @@ function moveItem(listType, fromIndex, toIndex){
   updateActiveTaskDisplay();
 }
 function setupListDropZone(listEl, listType){
+  if(hasSortable()) return;
   if(listEl.dataset.dropzone === 'true') return;
   listEl.dataset.dropzone = 'true';
   listEl.addEventListener('dragover', (event)=>{ event.preventDefault(); });
@@ -168,6 +198,7 @@ function setupListDropZone(listEl, listType){
   });
 }
 function setupDragHandlers(li, listType, index){
+  if(hasSortable()) return;
   li.classList.add('draggable-item');
   li.draggable = true;
   li.addEventListener('dragstart', (event)=>{
@@ -325,6 +356,7 @@ function tick(){ if(remaining<=0){ clearInterval(timerId); isRunning=false; $sta
 loadTimerState();
 loadTasks(); 
 loadBreaks();
+setupSortable();
 loadBudgets();
 loadPours();
 makeRain();
