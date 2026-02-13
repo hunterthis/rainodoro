@@ -59,8 +59,8 @@ let displayItem = { type: null, id: null };
 // per-task timers (remember remaining seconds per task between switches)
 let taskTimers = {};
 
-function saveTaskTimers(){ try{ localStorage.setItem(TASK_TIMER_KEY, JSON.stringify(taskTimers)); }catch(e){} }
-function loadTaskTimers(){ try{ const raw = localStorage.getItem(TASK_TIMER_KEY); taskTimers = raw ? JSON.parse(raw) : {}; }catch(e){ taskTimers = {}; } }
+function saveTaskTimers(){ try{ localStorage.setItem(TASK_TIMER_KEY, JSON.stringify(taskTimers)); console.debug('saveTaskTimers', TASK_TIMER_KEY, taskTimers); }catch(e){ console.error('saveTaskTimers error', e); } }
+function loadTaskTimers(){ try{ const raw = localStorage.getItem(TASK_TIMER_KEY); taskTimers = raw ? JSON.parse(raw) : {}; console.debug('loadTaskTimers', TASK_TIMER_KEY, taskTimers); }catch(e){ taskTimers = {}; console.error('loadTaskTimers error', e); } }
 
 function saveDisplay(){ try{ localStorage.setItem(DISPLAY_KEY, JSON.stringify(displayItem)); }catch(e){} }
 function loadDisplay(){ try{ const raw = localStorage.getItem(DISPLAY_KEY); displayItem = raw ? JSON.parse(raw) : {type:null,id:null}; }catch(e){ displayItem = {type:null,id:null}; } renderCompleted(); updateActiveTaskDisplay(); updateFinishBtnState(); }
@@ -194,6 +194,7 @@ function startTimer(){
     // load per-task remaining if present
     duration = modes.pomodoro;
     remaining = (taskTimers[activeTaskId] && typeof taskTimers[activeTaskId].remaining === 'number') ? taskTimers[activeTaskId].remaining : duration;
+    console.debug('startTimer: loaded remaining for', activeTaskId, remaining);
   } else if(currentMode === 'short'){
     if(breaks && breaks.short && breaks.short.length > 0){
       activeShortBreakId = breaks.short[0].id;
@@ -226,7 +227,7 @@ function startTimer(){
 }
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation();
   // save per-task remaining when pausing a running Pomodoro
-  if(currentMode === 'pomodoro' && displayItem && displayItem.type === 'task' && displayItem.id){ try{ taskTimers[displayItem.id] = { remaining }; saveTaskTimers(); }catch(e){} }
+  if(currentMode === 'pomodoro' && displayItem && displayItem.type === 'task' && displayItem.id){ try{ taskTimers[displayItem.id] = { remaining }; saveTaskTimers(); console.debug('pauseTimer: saved remaining for', displayItem.id, taskTimers[displayItem.id]); }catch(e){ console.error('pauseTimer save error', e); } }
   saveTimerState(); }
 function stopTimer(){ clearInterval(timerId); isRunning=false; // when stopping/resetting, clear any saved per-task remaining so it restarts fresh
   if(currentMode === 'pomodoro' && displayItem && displayItem.type === 'task' && displayItem.id){ try{ if(taskTimers && taskTimers[displayItem.id]){ delete taskTimers[displayItem.id]; saveTaskTimers(); } }catch(e){} }
@@ -438,7 +439,7 @@ function selectTask(id){
   // if switching tasks while a Pomodoro is running, save the current task's remaining and pause
   if(currentMode === 'pomodoro' && isRunning && displayItem && displayItem.type === 'task' && displayItem.id && displayItem.id !== id){
     // store remaining for current task
-    try{ taskTimers[displayItem.id] = { remaining }; saveTaskTimers(); }catch(e){}
+    try{ taskTimers[displayItem.id] = { remaining }; saveTaskTimers(); console.debug('selectTask: saved remaining for', displayItem.id, taskTimers[displayItem.id]); }catch(e){ console.error('selectTask save error', e); }
     pauseTimer();
     // switch displayed item to new task
     activeTaskId = id;
@@ -447,6 +448,7 @@ function selectTask(id){
     // load remaining for the newly selected task (or reset to full)
     duration = modes.pomodoro;
     remaining = (taskTimers[id] && typeof taskTimers[id].remaining === 'number') ? taskTimers[id].remaining : duration;
+    console.debug('selectTask: loaded remaining for', id, remaining);
     updateDisplay();
     return;
   }
