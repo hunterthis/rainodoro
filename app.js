@@ -174,15 +174,16 @@ function tick(){ if(remaining<=0){ stopTimer(); $status.textContent='Finished'; 
 
 function startTimer(){
   if(isRunning) return;
-  // auto-select the top-most item for the current mode
+  // require a selected task for Pomodoro mode; do not auto-select
   if(currentMode === 'pomodoro'){
-    if(tasks && tasks.length > 0){
-      activeTaskId = tasks[0].id;
-      saveTasks();
-      setDisplayedItem('task', activeTaskId);
-    } else {
-      setDisplayedItem(null, null);
+    if(!(displayItem && displayItem.type === 'task' && tasks.find(t=>t.id === displayItem.id))){
+      // prompt user in the active task area
+      $activeTaskDisplay.textContent = 'Please make a task';
+      return;
     }
+    // ensure activeTaskId matches the displayed item
+    activeTaskId = displayItem.id;
+    saveTasks();
   } else if(currentMode === 'short'){
     if(breaks && breaks.short && breaks.short.length > 0){
       activeShortBreakId = breaks.short[0].id;
