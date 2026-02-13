@@ -224,8 +224,13 @@ function startTimer(){
   $status.textContent='Running';
   enableRainAnimation();
 }
-function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
-function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
+function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation();
+  // save per-task remaining when pausing a running Pomodoro
+  if(currentMode === 'pomodoro' && displayItem && displayItem.type === 'task' && displayItem.id){ try{ taskTimers[displayItem.id] = { remaining }; saveTaskTimers(); }catch(e){} }
+  saveTimerState(); }
+function stopTimer(){ clearInterval(timerId); isRunning=false; // when stopping/resetting, clear any saved per-task remaining so it restarts fresh
+  if(currentMode === 'pomodoro' && displayItem && displayItem.type === 'task' && displayItem.id){ try{ if(taskTimers && taskTimers[displayItem.id]){ delete taskTimers[displayItem.id]; saveTaskTimers(); } }catch(e){} }
+  remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
 
 function finishPomodoroTask(){
   if(currentMode !== 'pomodoro') return;
