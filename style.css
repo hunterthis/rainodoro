@@ -131,6 +131,32 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .timer-compact #time{font-size:22px}
 }
 
+/* Improved portrait/mobile layout (e.g. Pixel 6 ~412px width) */
+@media (max-width:420px) {
+  .app{width:100%;padding:12px;border-radius:8px}
+  header{flex-direction:row;align-items:center}
+  .controls{gap:12px}
+  .visual{flex-direction:column;align-items:stretch;gap:12px}
+  .bucket-wrap{position:relative;width:180px;height:220px;margin:0 auto}
+  .bucket{width:160px;height:200px;margin:0 auto}
+  .sidepanel{width:100%;order:3;display:flex;flex-direction:column;align-items:stretch}
+  .sidebar{width:100%;margin:0;padding:0}
+  .timer-compact{min-width:unset;padding:12px;display:flex;flex-direction:column;align-items:stretch}
+  .timer-compact #time{font-size:32px;text-align:center}
+  .timer-compact .buttons{gap:12px;flex-direction:column}
+  .timer-compact .buttons button{width:100%;padding:12px;font-size:16px}
+  .timer-toggle-btn{width:100%;padding:10px}
+  .active-task{font-size:18px;padding:10px}
+  .task-list,.break-list{max-height:140px}
+  .completed-list{max-height:180px}
+  .section form{flex-direction:column;gap:8px}
+  .section input{width:100%}
+  .stats-subnav{flex-wrap:wrap}
+  #pomoStatsPanel{width:100%}
+  .pour-stats{flex-wrap:wrap}
+  .info-section{max-width:100%;padding:10px}
+}
+
 @media(max-width:920px){
   .app{display:block}
   .sidebar{width:auto;margin-bottom:12px}
