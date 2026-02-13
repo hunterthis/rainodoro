@@ -211,6 +211,11 @@ function startTimer(){
       setDisplayedItem(null, null);
     }
   }
+  // update display immediately to reflect the selected item's remaining time
+  try{
+    previousWaterHeight = 100 * (1 - (remaining / duration));
+  }catch(e){}
+  updateDisplay();
   initAudio();
   isRunning=true;
   timerId = setInterval(tick,1000);
