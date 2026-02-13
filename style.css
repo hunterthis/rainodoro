@@ -135,3 +135,13 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .app{display:block}
   .sidebar{width:auto;margin-bottom:12px}
 }
+
+/* Hide Pomo Stats panel and reset / finished controls in Ultra Focus Mode */
+.app.focus-mode #pomoStatsToggle,
+.app.focus-mode #pomoStatsPanel,
+.app.focus-mode #finishTaskBtn,
+.app.focus-mode #reset,
+.app.focus-mode .reset-stat-btn,
+.app.focus-mode .reset-pour-btn{
+  display: none !important;
+}
