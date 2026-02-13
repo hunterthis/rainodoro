@@ -67,9 +67,9 @@ function initAudio(){
 function setRainVolume(scale){ if(!rainGain || !audioCtx) return; const v = (scale||0) * masterVolume; rainGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); }
 
 // Water animation effects - particles placed in rain-overlay to avoid water overflow clipping
-function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found'); return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 16 + 8; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); console.log('Ripple created'); setTimeout(() => ripple.remove(), 800); }
+function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found'); return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 24 + 12; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); console.log('Ripple created at', size + 'px'); setTimeout(() => ripple.remove(), 800); }
 
-function createBubble(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found for bubble'); return; } const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 3 + 1.5; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '8%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; overlay.appendChild(bubble); console.log('Bubble created'); setTimeout(() => bubble.remove(), 2000); }
+function createBubble(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found for bubble'); return; } const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 4 + 2.5; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '8%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; overlay.appendChild(bubble); console.log('Bubble created at', size + 'px'); setTimeout(() => bubble.remove(), 2000); }
 
 // Pour sound using WebAudio
 function playPourSound(){ if(!audioCtx) initAudio(); const ctx = audioCtx; const now = ctx.currentTime; const osc = ctx.createOscillator(); const gain = ctx.createGain(); const filter = ctx.createBiquadFilter(); osc.frequency.setValueAtTime(150,now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); filter.type='lowpass'; filter.frequency.value=800; osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.3); osc.start(now); osc.stop(now+0.3); }
@@ -78,9 +78,9 @@ function formatTime(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${
 let previousWaterHeight = 0;
 function updateDisplay(){ $time.textContent = formatTime(remaining); const pct = 100*(1 - remaining/duration); $water.style.height = pct + '%';
   // create ripple when water level changes
-  if(isRunning && Math.abs(pct - previousWaterHeight) > 0.3){ createRipple(); }
-  // create bubbles as water fills (more frequently for visibility)
-  if(isRunning && pct > 10 && Math.random() > 0.5){ createBubble(); }
+  if(isRunning && Math.abs(pct - previousWaterHeight) > 0.2){ createRipple(); }
+  // create bubbles as water fills (much more frequently for visibility)
+  if(isRunning && pct > 10 && Math.random() > 0.3){ createBubble(); }
   previousWaterHeight = pct;
   // update pour button state
   const pourBtn = document.getElementById('pourBtn');
