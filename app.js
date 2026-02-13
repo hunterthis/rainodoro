@@ -96,6 +96,22 @@ function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; timerI
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
 function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
 
+function finishPomodoroTask(){
+  if(currentMode !== 'pomodoro') return;
+  if(isRunning){ clearInterval(timerId); isRunning=false; }
+  remaining = 0;
+  updateDisplay();
+  const pourBtn = document.getElementById('pourBtn');
+  if(pourBtn) pourBtn.disabled = false;
+  $start.disabled = false;
+  $pause.disabled = true;
+  $status.textContent = 'Finished';
+  setRainVolume(0);
+  disableRainAnimation();
+  onPomodoroFinished();
+  saveTimerState();
+}
+
 // Pour button behavior
 const $pourBtn = document.getElementById('pourBtn');
 if($pourBtn){ $pourBtn.addEventListener('click', ()=>{
@@ -458,3 +474,6 @@ if($infoToggle && $infoSection){ $infoToggle.addEventListener('click', ()=>{ con
 // timer visibility toggle (available on both pages)
 const $timerToggle = document.getElementById('timerToggle');
 if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; }); }
+
+const $finishTaskBtn = document.getElementById('finishTaskBtn');
+if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishPomodoroTask); }
