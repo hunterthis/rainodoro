@@ -30,7 +30,7 @@ h1{margin:0;font-size:28px}
 .mode.active{background:var(--accent);color:#041024;border:none}
 .timer{flex:1;text-align:center}
 #time{font-size:48px;font-weight:600}
-.buttons{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.buttons{display:flex;gap:12px;justify-content:center;margin-top:8px}
 .buttons button{padding:8px 12px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer}
 .settings{display:flex;flex-direction:column;gap:6px;color:var(--muted);align-items:flex-start}
 .settings label{display:flex;align-items:center;gap:8px}
@@ -41,7 +41,7 @@ h1{margin:0;font-size:28px}
 .sidepanel{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
  .timer-compact{background:transparent;padding:10px;border-radius:8px;min-width:140px;text-align:center}
 .timer-compact #time{font-size:28px;font-weight:600}
-.timer-compact .buttons{display:flex;flex-direction:column;gap:8px;justify-content:flex-start;margin-top:8px;align-items:stretch}
+.timer-compact .buttons{display:flex;flex-direction:column;gap:12px;justify-content:flex-start;margin-top:8px;align-items:stretch}
 .timer-compact .buttons button{padding:8px 10px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%}
 .timer-compact .buttons button:disabled{background:#0a1020;color:#4a5a6a;cursor:not-allowed;opacity:0.5}
 .timer-compact{min-width:120px}
@@ -69,7 +69,7 @@ h1{margin:0;font-size:28px}
  .task-list li.draggable-item:active{cursor:grabbing}
  .task-list li.dragging{opacity:0.5;border-color:rgba(78,168,222,0.4);background:rgba(78,168,222,0.06)}
  .task-meta{font-size:12px;color:var(--muted);margin-left:8px;display:flex;align-items:center;gap:8px}
- .task-actions button{margin-left:6px;padding:6px 8px;border-radius:6px;border:none;background:#153547;color:#eaf6ff}
+.task-actions button{margin-left:10px;padding:6px 8px;border-radius:6px;border:none;background:#153547;color:#eaf6ff}
  .target-controls{display:inline-flex;align-items:center;gap:8px}
  .target-controls button{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer}
  .target-controls span{font-size:12px;color:var(--muted)}
@@ -88,6 +88,17 @@ h1{margin:0;font-size:28px}
 .sidepanel .active-task{margin-top:12px;color:#e6eef6;font-size:24px;font-weight:600}
 .pour-stats{margin-top:12px;display:flex;gap:16px;font-size:12px;color:var(--muted)}
 .stat{display:flex;gap:6px}
+.completed-summary{font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:6px}
+.completed-list{list-style:none;padding:6px;margin:0;max-height:160px;overflow:auto;border:1px solid rgba(255,255,255,0.03);border-radius:6px;background:rgba(255,255,255,0.01)}
+.completed-list li{display:flex;justify-content:space-between;padding:6px;border-radius:4px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:12px;color:#e6eef6}
+.completed-list li:last-child{border-bottom:none}
+.tracker-controls{display:flex;gap:8px}
+.tracker-controls .timer-toggle-btn{padding:6px 8px;font-size:12px}
+.panel-small{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.01)}
+.stats-subnav{margin-top:6px}
+.stats-subnav .timer-toggle-btn{padding:6px 8px;font-size:13px}
+.reset-pour-btn{padding:4px 6px;border-radius:6px;border:none;background:#bfe8ff;color:#041024;cursor:pointer;font-size:11px}
+.reset-stat-btn{padding:4px 6px;border-radius:6px;border:none;background:#bfe8ff;color:#041024;cursor:pointer;font-size:11px;margin-left:8px}
 .bucket-wrap{position:relative;width:240px;height:320px;margin:0 12px}
 .bucket{position:absolute;left:0;right:0;bottom:0;margin:auto;width:180px;height:240px;border:6px solid #cfe8ff22;border-bottom-width:32px;border-radius:8px 8px 28px 28px;overflow:hidden;background:linear-gradient(180deg,#0b1b2a, #07121a);position:relative}
 .bucket::after{content:'';position:absolute;right:-40px;top:40px;width:40px;height:100px;border:6px solid #cfe8ff22;border-left:none;border-radius:0 20px 20px 0;background:transparent}

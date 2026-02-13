@@ -30,7 +30,7 @@
     </section>
 
     <aside class="sidebar">
-      <div class="section">
+      <div id="sidebarTasks" class="section">
         <div class="section-header">
           <h3>Tasks</h3>
           <div class="section-controls">
@@ -46,7 +46,7 @@
         <ul id="taskList" class="task-list"></ul>
       </div>
 
-      <div class="section">
+      <div id="sidebarShortBreaks" class="section">
         <div class="section-header">
           <h3>Short Break Items</h3>
           <div class="section-controls">
@@ -59,7 +59,7 @@
         <ul id="shortBreakList" class="break-list"></ul>
       </div>
 
-      <div class="section">
+      <div id="sidebarLongBreaks" class="section">
         <div class="section-header">
           <h3>Long Break Items</h3>
           <div class="section-controls">
@@ -98,6 +98,40 @@
         <div class="pour-stats">
           <div class="stat">Pomos: <span id="pomoPours">0</span> <button id="resetPomoPours" class="reset-pour-btn" title="Reset">↻</button></div>
           <div class="stat">Break Pomos: <span id="breakPours">0</span> <button id="resetBreakPours" class="reset-pour-btn" title="Reset">↻</button></div>
+        </div>
+        <button id="pomoStatsToggle" class="timer-toggle-btn" style="margin-top:8px;">Your Pomo Stats</button>
+        <div id="pomoStatsPanel" style="display:none;margin-top:8px;">
+          <div class="completed-summary">Your Pomo Stats</div>
+          <div class="stats-subnav" style="display:flex;gap:8px;margin-top:8px">
+            <button id="statsTasksBtn" class="timer-toggle-btn">Tasks</button>
+            <button id="statsPomosBtn" class="timer-toggle-btn">Pomos</button>
+            <button id="statsTimeBtn" class="timer-toggle-btn">Time</button>
+          </div>
+
+          <div id="tasksSection" class="panel-small" style="margin-top:8px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:600">Tasks (<span id="tasksCount">0</span>)</div>
+              <button id="resetTasksBtn" class="reset-stat-btn" title="Reset task progress">Reset</button>
+            </div>
+            <ul id="tasksPanelList" class="completed-list" style="margin-top:8px"></ul>
+          </div>
+
+          <div id="pomosSection" class="panel-small" style="margin-top:8px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:600">Pomos</div>
+              <button id="resetPomosBtn" class="reset-stat-btn" title="Clear completed pomos">Reset</button>
+            </div>
+            <div class="completed-summary" style="margin-top:6px">Total Pomodoro Time: <span id="totalPomoTime">0m</span></div>
+            <ul id="completedList" class="completed-list" style="margin-top:8px"></ul>
+          </div>
+
+          <div id="timeSection" class="panel-small" style="margin-top:8px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:600">Time Breakdown</div>
+              <button id="resetTimeBtn" class="reset-stat-btn" title="Clear completed pomos (resets time)">Reset</button>
+            </div>
+            <div id="timeBreakdown" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+          </div>
         </div>
       </div>
     </section>
