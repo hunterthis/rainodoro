@@ -133,7 +133,63 @@ function loadTimerState(){
 // Task & break persistence and UI
 function loadTasks(){ try{ const raw = localStorage.getItem(TASKS_KEY); tasks = raw ? JSON.parse(raw) : []; activeTaskId = tasks.find(t=>t.isActive)?.id || null; }catch(e){ tasks=[] } renderTasks(); }
 function saveTasks(){ localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
-function renderTasks(){ $taskList.innerHTML=''; tasks.forEach(t=>{
+function getDragData(event){
+  try{ return JSON.parse(event.dataTransfer.getData('text/plain')); }
+  catch(e){ return null; }
+}
+function getListByType(listType){
+  if(listType === 'tasks') return tasks;
+  if(listType === 'shortBreaks') return breaks.short;
+  if(listType === 'longBreaks') return breaks.long;
+  return null;
+}
+function moveItem(listType, fromIndex, toIndex){
+  const list = getListByType(listType);
+  if(!list || fromIndex < 0 || fromIndex >= list.length) return;
+  const [item] = list.splice(fromIndex, 1);
+  const maxIndex = list.length;
+  const targetIndex = Math.max(0, Math.min(maxIndex, toIndex));
+  list.splice(targetIndex, 0, item);
+  if(listType === 'tasks'){ saveTasks(); renderTasks(); }
+  else { saveBreaks(); renderBreaks(); }
+  updateActiveTaskDisplay();
+}
+function setupListDropZone(listEl, listType){
+  if(listEl.dataset.dropzone === 'true') return;
+  listEl.dataset.dropzone = 'true';
+  listEl.addEventListener('dragover', (event)=>{ event.preventDefault(); });
+  listEl.addEventListener('drop', (event)=>{
+    event.preventDefault();
+    const data = getDragData(event);
+    if(!data || data.list !== listType) return;
+    const list = getListByType(listType);
+    if(!list) return;
+    moveItem(listType, data.index, list.length);
+  });
+}
+function setupDragHandlers(li, listType, index){
+  li.classList.add('draggable-item');
+  li.draggable = true;
+  li.addEventListener('dragstart', (event)=>{
+    if(event.target.closest('button')){ event.preventDefault(); return; }
+    li.classList.add('dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', JSON.stringify({list: listType, index}));
+  });
+  li.addEventListener('dragend', ()=>{ li.classList.remove('dragging'); });
+  li.addEventListener('dragover', (event)=>{ event.preventDefault(); event.dataTransfer.dropEffect = 'move'; });
+  li.addEventListener('drop', (event)=>{
+    event.preventDefault();
+    const data = getDragData(event);
+    if(!data || data.list !== listType) return;
+    const from = data.index;
+    const to = index;
+    if(from === to) return;
+    moveItem(listType, from, to);
+  });
+  li.querySelectorAll('button').forEach(btn=>{ btn.draggable = false; });
+}
+function renderTasks(){ setupListDropZone($taskList, 'tasks'); $taskList.innerHTML=''; tasks.forEach((t, index)=>{
   const li=document.createElement('li');
   li.dataset.id=t.id;
   const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
@@ -152,7 +208,9 @@ function renderTasks(){ $taskList.innerHTML=''; tasks.forEach(t=>{
   selectBtn.addEventListener('click', ()=>{ selectTask(t.id); });
   const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ deleteTask(t.id); });
   actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions); $taskList.appendChild(li);
+  li.appendChild(left); li.appendChild(actions);
+  setupDragHandlers(li, 'tasks', index);
+  $taskList.appendChild(li);
 }); updateActiveTaskDisplay(); }
 
 function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.push(t); saveTasks(); renderTasks(); }
@@ -181,7 +239,7 @@ function updateActiveTaskDisplay(){
 
 function loadBreaks(){ try{ const raw=localStorage.getItem(BREAKS_KEY); breaks = raw ? JSON.parse(raw) : {short:[], long:[]}; }catch(e){ breaks={short:[], long:[]} } renderBreaks(); }
 function saveBreaks(){ localStorage.setItem(BREAKS_KEY, JSON.stringify(breaks)); }
-function renderBreaks(){ $shortBreakList.innerHTML=''; $longBreakList.innerHTML=''; breaks.short.forEach((it)=>{ const li=document.createElement('li');
+function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setupListDropZone($longBreakList, 'longBreaks'); $shortBreakList.innerHTML=''; $longBreakList.innerHTML=''; breaks.short.forEach((it, index)=>{ const li=document.createElement('li');
   li.dataset.id=it.id;
   const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
   const title=document.createElement('div'); title.textContent=it.text;
@@ -198,8 +256,10 @@ function renderBreaks(){ $shortBreakList.innerHTML=''; $longBreakList.innerHTML=
   selectBtn.addEventListener('click', ()=>{ activeShortBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
   const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.short = breaks.short.filter(x=>x.id!==it.id); if(activeShortBreakId===it.id) activeShortBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
   actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions); $shortBreakList.appendChild(li); });
-  breaks.long.forEach((it)=>{ const li=document.createElement('li');
+  li.appendChild(left); li.appendChild(actions);
+  setupDragHandlers(li, 'shortBreaks', index);
+  $shortBreakList.appendChild(li); });
+  breaks.long.forEach((it, index)=>{ const li=document.createElement('li');
   li.dataset.id=it.id;
   const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
   const title=document.createElement('div'); title.textContent=it.text;
@@ -216,7 +276,9 @@ function renderBreaks(){ $shortBreakList.innerHTML=''; $longBreakList.innerHTML=
   selectBtn.addEventListener('click', ()=>{ activeLongBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
   const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.long = breaks.long.filter(x=>x.id!==it.id); if(activeLongBreakId===it.id) activeLongBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
   actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions); $longBreakList.appendChild(li); }); }
+  li.appendChild(left); li.appendChild(actions);
+  setupDragHandlers(li, 'longBreaks', index);
+  $longBreakList.appendChild(li); }); }
 
 // Budget persistence (pomodoro, short, long counts)
 function loadBudgets(){ try{ const raw=localStorage.getItem(BUDGETS_KEY); budgets = raw ? JSON.parse(raw) : {pomodoro:0,short:0,long:0}; }catch(e){ budgets={pomodoro:0,short:0,long:0}; } renderBudgets(); }
