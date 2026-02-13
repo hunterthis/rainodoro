@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rainodoro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1 id="mainTitle">Rainodoro</h1>
+      <div class="header-buttons">
+        <button id="infoToggle" class="header-btn" title="About Rainodoro">ℹ</button>
+        <button id="focusToggle" class="focus-toggle header-btn" title="Ultra Focus Mode">Ultra Focus Mode</button>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="modes">
+        <button data-mode="pomodoro" class="mode active">Pomodoro</button>
+        <button data-mode="short" class="mode">Short Break</button>
+        <button data-mode="long" class="mode">Long Break</button>
+      </div>
+
+      <div class="settings">
+        <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
+        <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="section">
+        <div class="section-header">
+          <h3>Tasks</h3>
+          <div class="section-controls">
+            <button id="pomoDec" class="count-btn">−</button>
+            <span id="pomoCount" class="count-display">0</span>
+            <button id="pomoInc" class="count-btn">+</button>
+          </div>
+        </div>
+        <form id="taskForm">
+          <input id="taskTitle" placeholder="New task title" required />
+          <button type="submit">Add</button>
+        </form>
+        <ul id="taskList" class="task-list"></ul>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h3>Short Break Items</h3>
+          <div class="section-controls">
+            <button id="shortDec" class="count-btn">−</button>
+            <span id="shortCount" class="count-display">0</span>
+            <button id="shortInc" class="count-btn">+</button>
+          </div>
+        </div>
+        <form id="shortBreakForm"><input id="shortBreakInput" placeholder="Add short-break item" /><button type="submit">Add</button></form>
+        <ul id="shortBreakList" class="break-list"></ul>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h3>Long Break Items</h3>
+          <div class="section-controls">
+            <button id="longDec" class="count-btn">−</button>
+            <span id="longCount" class="count-display">0</span>
+            <button id="longInc" class="count-btn">+</button>
+          </div>
+        </div>
+        <form id="longBreakForm"><input id="longBreakInput" placeholder="Add long-break item" /><button type="submit">Add</button></form>
+        <ul id="longBreakList" class="break-list"></ul>
+      </div>
+    </aside>
+
+    <section class="visual">
+      <div class="bucket-wrap">
+        <div class="bucket">
+          <div class="water" id="water"></div>
+          <div class="rain-overlay" id="rainOverlay"></div>
+        </div>
+      </div>
+
+      <div class="sidepanel">
+        <div class="timer-compact">
+          <div id="time">25:00</div>
+          <div class="buttons">
+            <button id="start">Start</button>
+            <button id="pause" disabled>Pause</button>
+            <button id="reset">Reset</button>
+            <button id="pourBtn" disabled title="Fill the bucket to pour">Pour</button>
+          </div>
+          <button id="timerToggle" class="timer-toggle-btn" title="Hide the Timer">Hide the Timer</button>
+        </div>
+        <p class="status" id="status">Ready</p>
+        <div class="active-task" id="activeTaskDisplay">No task selected</div>
+        <div class="pour-stats">
+          <div class="stat">Pomos: <span id="pomoPours">0</span> <button id="resetPomoPours" class="reset-pour-btn" title="Reset">↻</button></div>
+          <div class="stat">Break Pomos: <span id="breakPours">0</span> <button id="resetBreakPours" class="reset-pour-btn" title="Reset">↻</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="infoSection" class="info-section" style="display:none">
+      <div class="info-content">
+        <h2>About Rainodoro</h2>
+        <p><strong>The Pomodoro Technique</strong> is a time management method that uses timed intervals (typically 25 minutes) for focused work, followed by short breaks. It helps maintain productivity while preventing burnout.</p>
+        <p><strong>Rainodoro</strong> is a low-sensory approach to Pomodoros. Instead of loud alarms and anxiety-inducing countdowns, we use the gentle visual of rain filling a bucket. This creates a calming, meditative experience where time passes naturally—allowing you to stay focused without the stress of watching the clock.</p>
+      </div>
+    </section>
+
+    <footer>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

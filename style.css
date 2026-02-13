@@ -1,0 +1,111 @@
+:root{
+  --bg:#0b1020;
+  --card:#0f1724;
+  --accent:#4ea8de;
+  --muted:#9aa4b2;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021 0%,#0b1320 100%);color:#e6eef6;display:flex;min-height:100vh;align-items:center;justify-content:center}
+.app{width:920px;max-width:95%;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+.app.focus-mode{width:100%;max-width:100%;padding:0;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
+header{display:flex;justify-content:space-between;align-items:center;position:relative}
+.app.focus-mode header{justify-content:center}
+h1{margin:0;font-size:28px}
+.app.focus-mode h1{display:none}
+.header-buttons{display:flex;gap:8px;align-items:center}
+.header-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);color:#e6eef6;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px}
+.focus-toggle{position:relative}
+.app.focus-mode .header-buttons{position:fixed;top:20px;right:20px;gap:12px}
+.app.focus-mode .header-btn{background:rgba(255,255,255,0.05)}
+.timer-toggle-btn{margin-top:8px;padding:6px 8px;border-radius:6px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%;font-size:12px}
+.info-section{margin-top:16px;padding:12px;background:rgba(78,168,222,0.05);border:1px solid rgba(78,168,222,0.1);border-radius:8px;max-width:600px;margin-left:auto;margin-right:auto}
+.info-content{color:#e6eef6;font-size:13px;line-height:1.6}
+.info-content h2{margin:0 0 10px 0;font-size:16px;color:var(--accent)}
+.info-content p{margin:0 0 8px 0}
+.info-content p:last-child{margin-bottom:0}
+.tagline{margin:0;color:var(--muted)}
+.controls{display:flex;gap:20px;align-items:center;margin-top:16px}
+.modes{display:flex;gap:8px}
+.mode{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
+.mode.active{background:var(--accent);color:#041024;border:none}
+.timer{flex:1;text-align:center}
+#time{font-size:48px;font-weight:600}
+.buttons{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.buttons button{padding:8px 12px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer}
+.settings{display:flex;flex-direction:column;gap:6px;color:var(--muted);align-items:flex-start}
+.settings label{display:flex;align-items:center;gap:8px}
+.settings input[type="range"]{width:120px}
+.mute-btn{padding:6px 12px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s}
+.mute-btn:hover{background:#1f3d52}
+.visual{margin-top:22px;display:flex;gap:18px;align-items:center}
+.sidepanel{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+ .timer-compact{background:transparent;padding:10px;border-radius:8px;min-width:140px;text-align:center}
+.timer-compact #time{font-size:28px;font-weight:600}
+.timer-compact .buttons{display:flex;flex-direction:column;gap:8px;justify-content:flex-start;margin-top:8px;align-items:stretch}
+.timer-compact .buttons button{padding:8px 10px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%}
+.timer-compact .buttons button:disabled{background:#0a1020;color:#4a5a6a;cursor:not-allowed;opacity:0.5}
+.timer-compact{min-width:120px}
+.settings label{display:flex;align-items:center;gap:8px}
+.settings input[type="range"]{width:120px}
+.pour-btn{display:inline-block}
+
+.app.focus-mode .visual{margin:0;flex-direction:column;justify-content:center;gap:32px}
+.app.focus-mode .sidepanel{display:flex;flex-direction:column;align-items:center}
+.app.focus-mode .timer-compact{min-width:auto}
+.app.focus-mode .active-task{font-size:24px;color:#e6eef6;font-weight:600;margin-top:24px}
+.app.focus-mode .status{margin:0;font-size:14px}
+.app.focus-mode .pour-stats{display:none}
+.app.focus-mode .section form,.app.focus-mode .controls,.app.focus-mode .sidebar{display:none}
+ .sidebar{float:right;width:300px;margin-left:18px;padding:0;background:transparent;border-radius:8px}
+.section{margin-bottom:16px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.section-header h3{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#e6eef6}
+.section-controls{display:flex;align-items:center;gap:6px}
+.count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
+.count-display{font-size:12px;color:var(--muted);min-width:20px;text-align:center}
+.task-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:220px;overflow:auto}
+ .task-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
+ .task-meta{font-size:12px;color:var(--muted);margin-left:8px;display:flex;align-items:center;gap:8px}
+ .task-actions button{margin-left:6px;padding:6px 8px;border-radius:6px;border:none;background:#153547;color:#eaf6ff}
+ .target-controls{display:inline-flex;align-items:center;gap:8px}
+ .target-controls button{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer}
+ .target-controls span{font-size:12px;color:var(--muted)}
+.breaks{margin-top:8px}
+.break-section{margin-bottom:10px}
+.break-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:220px;overflow:auto}
+ .break-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
+.reset-pour-btn{padding:2px 4px;border-radius:3px;border:none;background:var(--accent);color:#041024;cursor:pointer;font-size:10px}
+.section form{display:flex;gap:6px;margin-bottom:10px}
+.section input{flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.section button[type="submit"]{padding:6px 8px;border-radius:6px;border:none;background:var(--accent);color:#041024;cursor:pointer}
+.sidebar > .active-task{margin-bottom:12px;padding:10px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;color:#e6eef6;font-size:24px;font-weight:600}
+.sidepanel .active-task{margin-top:12px;color:#e6eef6;font-size:24px;font-weight:600}
+.pour-stats{margin-top:12px;display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.stat{display:flex;gap:6px}
+.bucket-wrap{position:relative;width:240px;height:320px;margin:0 12px}
+.bucket{position:absolute;left:0;right:0;bottom:0;margin:auto;width:180px;height:240px;border:6px solid #cfe8ff22;border-bottom-width:32px;border-radius:8px 8px 28px 28px;overflow:hidden;background:linear-gradient(180deg,#0b1b2a, #07121a);position:relative}
+.bucket::after{content:'';position:absolute;right:-40px;top:40px;width:40px;height:100px;border:6px solid #cfe8ff22;border-left:none;border-radius:0 20px 20px 0;background:transparent}
+.water{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(180deg,#7ad2ff 0%,#2ea3ff 100%);transition:height 0.4s linear}
+.rain-overlay{position:absolute;inset:0;pointer-events:none}
+.status{color:var(--muted);margin-left:8px}
+footer{margin-top:18px;color:var(--muted);font-size:12px}
+
+/* small raindrops animation for overlay */
+@keyframes drop{0%{transform:translateY(-10px);opacity:0}50%{opacity:1}100%{transform:translateY(220px);opacity:0}}
+.raindrop{position:absolute;width:2px;height:14px;background:linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0.2));border-radius:2px;opacity:0.6}
+
+/* responsive */
+@media(max-width:520px){.app{padding:16px}.bucket-wrap{width:160px;height:220px}.bucket{width:130px;height:190px}.controls{flex-direction:column;align-items:stretch}.visual{flex-direction:column;align-items:center}}
+
+@media(max-width:640px){
+  .visual{flex-direction:column;align-items:center}
+  .sidepanel{align-items:center}
+  .bucket-wrap{width:220px;height:280px}
+  .bucket{width:170px;height:220px}
+  .timer-compact #time{font-size:22px}
+}
+
+@media(max-width:920px){
+  .app{display:block}
+  .sidebar{width:auto;margin-bottom:12px}
+}
