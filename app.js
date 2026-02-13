@@ -45,6 +45,7 @@ const TASKS_KEY = 'rainodoro_tasks_v1';
 const BREAKS_KEY = 'rainodoro_breaks_v1';
 const BUDGETS_KEY = 'rainodoro_budgets_v1';
 const POURS_KEY = 'rainodoro_pours_v1';
+const TIMER_STATE_KEY = 'rainodoro_timer_v1';
 
 // WebAudio rain noise
 let audioCtx, rainGain, rainSource;
@@ -89,7 +90,7 @@ function updateDisplay(){ $time.textContent = formatTime(remaining); const pct =
   if(isRunning && audioCtx && rainGain && !isMuted){ const fillFactor = Math.max(0, Math.min(1, pct/100)); const scaled = 0.15 + 0.85 * fillFactor; setRainVolume(scaled); } else { setRainVolume(0); }
 }
 
-function tick(){ if(remaining<=0){ stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } remaining--; updateDisplay(); }
+function tick(){ if(remaining<=0){ stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } remaining--; updateDisplay(); saveTimerState(); }
 
 function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; timerId = setInterval(tick,1000); $start.disabled=true; $pause.disabled=false; $status.textContent='Running'; enableRainAnimation(); }
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
@@ -119,13 +120,33 @@ if($pourBtn){ $pourBtn.addEventListener('click', ()=>{
 // Timer state persistence
 function saveTimerState(){ 
   timerState[currentMode].remaining = remaining; 
+  try{
+    const payload = {
+      currentMode,
+      states: {
+        pomodoro: {remaining: timerState.pomodoro.remaining},
+        short: {remaining: timerState.short.remaining},
+        long: {remaining: timerState.long.remaining}
+      }
+    };
+    localStorage.setItem(TIMER_STATE_KEY, JSON.stringify(payload));
+  }catch(e){}
 }
 function loadTimerState(){ 
   try{ 
-    const raw = localStorage.getItem('rainodoro_timer_v1'); 
+    const raw = localStorage.getItem(TIMER_STATE_KEY); 
     if(raw){ 
-      const saved = JSON.parse(raw); 
-      Object.keys(saved).forEach(mode=>{ if(timerState[mode]) timerState[mode] = {duration: timerState[mode].duration, remaining: saved[mode].remaining}; }); 
+      const saved = JSON.parse(raw);
+      if(saved && saved.currentMode && timerState[saved.currentMode]) currentMode = saved.currentMode;
+      if(saved && saved.states){
+        Object.keys(saved.states).forEach(mode=>{
+          if(timerState[mode] && typeof saved.states[mode].remaining === 'number'){
+            timerState[mode].remaining = saved.states[mode].remaining;
+          }
+        });
+      } else if(saved){
+        Object.keys(saved).forEach(mode=>{ if(timerState[mode] && saved[mode] && typeof saved[mode].remaining === 'number') timerState[mode].remaining = saved[mode].remaining; });
+      }
     } 
   }catch(e){} 
 }
@@ -350,10 +371,17 @@ document.getElementById('longInc').addEventListener('click', ()=>{ budgets.long+
 function onPomodoroFinished(){ if(activeTaskId){ const t = tasks.find(x=>x.id===activeTaskId); if(t){ t.completed = (t.completed||0) + 1; saveTasks(); renderTasks(); } } saveTimerState(); }
 
 // update tick to call onPomodoroFinished when finishing a pomodoro
-function tick(){ if(remaining<=0){ clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; $status.textContent='Finished'; setRainVolume(0); if(currentMode==='pomodoro'){ onPomodoroFinished(); } return; } remaining--; updateDisplay(); }
+function tick(){ if(remaining<=0){ clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; $status.textContent='Finished'; setRainVolume(0); if(currentMode==='pomodoro'){ onPomodoroFinished(); } return; } remaining--; updateDisplay(); saveTimerState(); }
 
 // initial load
 loadTimerState();
+duration = timerState[currentMode].duration;
+remaining = timerState[currentMode].remaining;
+updateDisplay();
+document.querySelectorAll('.mode').forEach(btn=>{
+  btn.classList.toggle('active', btn.dataset.mode === currentMode);
+});
+$status.textContent = (remaining === duration) ? 'Ready' : 'Paused';
 loadTasks(); 
 loadBreaks();
 setupSortable();
@@ -361,6 +389,7 @@ loadBudgets();
 loadPours();
 makeRain();
 disableRainAnimation();
+window.addEventListener('beforeunload', saveTimerState);
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',e=>{
   document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
