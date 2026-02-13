@@ -315,7 +315,7 @@ if($muteBtn){
 }
 
 // create some raindrop elements for visual effect
-function makeRain(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) return; overlay.innerHTML=''; for(let i=0;i<80;i++){ const d=document.createElement('div'); d.className='raindrop'; d.style.left = (Math.random()*100)+'%'; d.style.top = (Math.random()*10)+'%'; d.style.height = (8+Math.random()*18)+'px'; d.style.opacity = 0.3+0.4*Math.random(); d.style.animation = `drop ${0.9+Math.random()*1.6}s linear ${Math.random()*1.5}s infinite`; overlay.appendChild(d); } }
+function makeRain(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) return; overlay.innerHTML=''; for(let i=0;i<80;i++){ const d=document.createElement('div'); d.className='raindrop'; d.style.left = (Math.random()*100)+'%'; d.style.top = (Math.random()*10)+'%'; d.style.height = (8+Math.random()*18)+'px'; d.style.animation = `drop ${0.9+Math.random()*1.6}s linear ${Math.random()*1.5}s infinite`; overlay.appendChild(d); } }
 
 // Control raindrop animation
 function enableRainAnimation(){ const raindrops = document.querySelectorAll('.raindrop'); raindrops.forEach(d=>d.style.animationPlayState='running'); }
