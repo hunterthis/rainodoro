@@ -48,12 +48,19 @@ const POURS_KEY = 'rainodoro_pours_v1';
 const TIMER_STATE_KEY = 'rainodoro_timer_v1';
 const COMPLETED_KEY = 'rainodoro_completed_v1';
 const DISPLAY_KEY = 'rainodoro_display_v1';
+const TASK_TIMER_KEY = 'rainodoro_task_timers_v1';
 
 // completed pomodoros
 let completedPomos = [];
 
 // displayed active item (can be a task, short break, or long break)
 let displayItem = { type: null, id: null };
+
+// per-task timers (remember remaining seconds per task between switches)
+let taskTimers = {};
+
+function saveTaskTimers(){ try{ localStorage.setItem(TASK_TIMER_KEY, JSON.stringify(taskTimers)); }catch(e){} }
+function loadTaskTimers(){ try{ const raw = localStorage.getItem(TASK_TIMER_KEY); taskTimers = raw ? JSON.parse(raw) : {}; }catch(e){ taskTimers = {}; } }
 
 function saveDisplay(){ try{ localStorage.setItem(DISPLAY_KEY, JSON.stringify(displayItem)); }catch(e){} }
 function loadDisplay(){ try{ const raw = localStorage.getItem(DISPLAY_KEY); displayItem = raw ? JSON.parse(raw) : {type:null,id:null}; }catch(e){ displayItem = {type:null,id:null}; } renderCompleted(); updateActiveTaskDisplay(); updateFinishBtnState(); }
@@ -184,6 +191,9 @@ function startTimer(){
     // ensure activeTaskId matches the displayed item
     activeTaskId = displayItem.id;
     saveTasks();
+    // load per-task remaining if present
+    duration = modes.pomodoro;
+    remaining = (taskTimers[activeTaskId] && typeof taskTimers[activeTaskId].remaining === 'number') ? taskTimers[activeTaskId].remaining : duration;
   } else if(currentMode === 'short'){
     if(breaks && breaks.short && breaks.short.length > 0){
       activeShortBreakId = breaks.short[0].id;
@@ -408,11 +418,30 @@ function deleteTask(id){
   if(activeTaskId===id) activeTaskId=null;
   // clear displayed item if it pointed to this task
   if(displayItem && displayItem.type === 'task' && displayItem.id === id){ displayItem = {type:null,id:null}; saveDisplay(); }
+  // remove any saved per-task timer state
+  if(taskTimers && taskTimers[id]){ delete taskTimers[id]; saveTaskTimers(); }
   saveTasks(); renderTasks(); updateActiveTaskDisplay(); updateFinishBtnState();
 }
 function changeTarget(id, delta){ const t = tasks.find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
 function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short' ? breaks.short : breaks.long; const item = breaks_arr.find(x=>x.id===id); if(!item) return; item.target = Math.max(1, (item.target||1) + delta); saveBreaks(); renderBreaks(); }
-function selectTask(id){ activeTaskId = id; saveTasks(); renderTasks(); setDisplayedItem('task', id); }
+function selectTask(id){
+  // if switching tasks while a Pomodoro is running, save the current task's remaining and pause
+  if(currentMode === 'pomodoro' && isRunning && displayItem && displayItem.type === 'task' && displayItem.id && displayItem.id !== id){
+    // store remaining for current task
+    try{ taskTimers[displayItem.id] = { remaining }; saveTaskTimers(); }catch(e){}
+    pauseTimer();
+    // switch displayed item to new task
+    activeTaskId = id;
+    saveTasks();
+    setDisplayedItem('task', id);
+    // load remaining for the newly selected task (or reset to full)
+    duration = modes.pomodoro;
+    remaining = (taskTimers[id] && typeof taskTimers[id].remaining === 'number') ? taskTimers[id].remaining : duration;
+    updateDisplay();
+    return;
+  }
+  activeTaskId = id; saveTasks(); renderTasks(); setDisplayedItem('task', id);
+}
 function updateActiveTaskDisplay(){
   if(displayItem && displayItem.type){
     if(displayItem.type === 'task'){
@@ -555,6 +584,8 @@ function onPomodoroFinished(finishedDuration, mode){
   const dur = (typeof finishedDuration === 'number') ? finishedDuration : (modes[usedMode] || modes.pomodoro);
   // attribute to active task only for pomodoro mode
   if(usedMode === 'pomodoro' && activeTaskId){ const t = tasks.find(x=>x.id===activeTaskId); if(t){ t.completed = (t.completed||0) + 1; saveTasks(); renderTasks(); } }
+  // clear any saved per-task timer state for the completed task
+  if(usedMode === 'pomodoro' && activeTaskId){ if(taskTimers && taskTimers[activeTaskId]){ delete taskTimers[activeTaskId]; saveTaskTimers(); } }
   const taskTitle = activeTaskId ? (tasks.find(x=>x.id===activeTaskId) || {}).title : null;
   // temporarily set currentMode to usedMode when recording so entry stores proper mode
   const prevMode = currentMode;
@@ -582,6 +613,7 @@ loadBreaks();
 setupSortable();
 loadBudgets();
 loadPours();
+loadTaskTimers();
 loadCompleted();
 loadDisplay();
 renderTasksPanel();
@@ -593,6 +625,7 @@ updateFormsVisibility();
 makeRain();
 disableRainAnimation();
 window.addEventListener('beforeunload', saveTimerState);
+window.addEventListener('beforeunload', saveTaskTimers);
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',e=>{
   document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
