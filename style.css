@@ -133,12 +133,14 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 
 /* Improved portrait/mobile layout (e.g. Pixel 6 ~412px width) */
 @media (max-width:420px) {
+  :root{--bucket-max-width:90vw}
   .app{width:100%;padding:12px;border-radius:8px}
   header{flex-direction:row;align-items:center}
   .controls{gap:12px}
   .visual{flex-direction:column;align-items:stretch;gap:12px}
-  .bucket-wrap{position:relative;width:180px;height:220px;margin:0 auto}
-  .bucket{width:160px;height:200px;margin:0 auto}
+  /* bucket scales with viewport width so it always fits */
+  .bucket-wrap{position:relative;width:var(--bucket-max-width);height:calc(var(--bucket-max-width) * 1.15);margin:0 auto}
+  .bucket{width:calc(var(--bucket-max-width) - 20px);height:calc(var(--bucket-max-width) * 0.95);margin:0 auto}
   .sidepanel{width:100%;order:3;display:flex;flex-direction:column;align-items:stretch}
   .sidebar{width:100%;margin:0;padding:0}
   .timer-compact{min-width:unset;padding:12px;display:flex;flex-direction:column;align-items:stretch}
@@ -155,7 +157,14 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   #pomoStatsPanel{width:100%}
   .pour-stats{flex-wrap:wrap}
   .info-section{max-width:100%;padding:10px}
+  /* ensure side lists are visible above the fold where possible */
+  .sidebar .section{padding:8px}
 }
+
+/* Ultra Focus Mode: allow larger bucket and hide side chrome */
+.app.focus-mode .bucket-wrap{--bucket-max-width:96vw;height:calc(96vw * 1.25)}
+.app.focus-mode .bucket{width:calc(var(--bucket-max-width) - 12px);height:calc(var(--bucket-max-width) * 1.05)}
+.app.focus-mode .sidebar{display:none}
 
 @media(max-width:920px){
   .app{display:block}
