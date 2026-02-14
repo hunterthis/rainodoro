@@ -416,14 +416,27 @@ function renderTasks(){ setupListDropZone($taskList, 'tasks'); $taskList.innerHT
   const actions=document.createElement('div'); actions.className='task-actions';
   const selectBtn=document.createElement('button'); selectBtn.textContent = (displayItem && displayItem.type==='task' && displayItem.id===t.id)?'Active':'Select';
   selectBtn.addEventListener('click', ()=>{ selectTask(t.id); });
+  const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.addEventListener('click', ()=>{ editTask(t.id); });
   const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ deleteTask(t.id); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
+  actions.appendChild(selectBtn); actions.appendChild(editBtn); actions.appendChild(del);
   li.appendChild(left); li.appendChild(actions);
   setupDragHandlers(li, 'tasks', index);
   $taskList.appendChild(li);
 }); updateActiveTaskDisplay(); }
 
 function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.push(t); saveTasks(); renderTasks(); }
+function editTask(id){
+  const t = tasks.find(x=>x.id===id);
+  if(!t) return;
+  const next = prompt('Edit task', t.title);
+  if(next === null) return;
+  const trimmed = next.trim();
+  if(!trimmed) return;
+  t.title = trimmed;
+  saveTasks();
+  renderTasks();
+  updateActiveTaskDisplay();
+}
 function deleteTask(id){
   tasks = tasks.filter(t=>t.id!==id);
   if(activeTaskId===id) activeTaskId=null;
@@ -508,10 +521,11 @@ function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setu
   const actions=document.createElement('div'); actions.className='task-actions';
   const selectBtn=document.createElement('button'); selectBtn.textContent = (displayItem && displayItem.type==='short' && displayItem.id===it.id)?'Active':'Select';
   selectBtn.addEventListener('click', ()=>{ activeShortBreakId = it.id; saveBreaks(); renderBreaks(); setDisplayedItem('short', it.id); });
+  const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.addEventListener('click', ()=>{ editBreakItem('short', it.id); });
   const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.short = breaks.short.filter(x=>x.id!==it.id); if(activeShortBreakId===it.id) activeShortBreakId=null; // clear displayed if it was this
     if(displayItem && displayItem.type==='short' && displayItem.id===it.id){ displayItem = {type:null,id:null}; saveDisplay(); }
     saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishBtnState(); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
+  actions.appendChild(selectBtn); actions.appendChild(editBtn); actions.appendChild(del);
   li.appendChild(left); li.appendChild(actions);
   setupDragHandlers(li, 'shortBreaks', index);
   $shortBreakList.appendChild(li); });
@@ -530,13 +544,28 @@ function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setu
   const actions=document.createElement('div'); actions.className='task-actions';
   const selectBtn=document.createElement('button'); selectBtn.textContent = (displayItem && displayItem.type==='long' && displayItem.id===it.id)?'Active':'Select';
   selectBtn.addEventListener('click', ()=>{ activeLongBreakId = it.id; saveBreaks(); renderBreaks(); setDisplayedItem('long', it.id); });
+  const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.addEventListener('click', ()=>{ editBreakItem('long', it.id); });
   const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.long = breaks.long.filter(x=>x.id!==it.id); if(activeLongBreakId===it.id) activeLongBreakId=null; // clear displayed if it was this
     if(displayItem && displayItem.type==='long' && displayItem.id===it.id){ displayItem = {type:null,id:null}; saveDisplay(); }
     saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishBtnState(); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
+  actions.appendChild(selectBtn); actions.appendChild(editBtn); actions.appendChild(del);
   li.appendChild(left); li.appendChild(actions);
   setupDragHandlers(li, 'longBreaks', index);
   $longBreakList.appendChild(li); }); }
+
+function editBreakItem(type, id){
+  const list = type === 'short' ? breaks.short : breaks.long;
+  const item = list.find(x=>x.id===id);
+  if(!item) return;
+  const next = prompt('Edit item', item.text);
+  if(next === null) return;
+  const trimmed = next.trim();
+  if(!trimmed) return;
+  item.text = trimmed;
+  saveBreaks();
+  renderBreaks();
+  updateActiveTaskDisplay();
+}
 
 // Budget persistence (pomodoro, short, long counts)
 function loadBudgets(){ try{ const raw=localStorage.getItem(BUDGETS_KEY); budgets = raw ? JSON.parse(raw) : {pomodoro:0,short:0,long:0}; }catch(e){ budgets={pomodoro:0,short:0,long:0}; } renderBudgets(); }
