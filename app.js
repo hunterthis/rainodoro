@@ -442,7 +442,6 @@ function reorderFromDom(listType, listEl){
   updateActiveTaskDisplay();
 }
 function setupSortable(){
-  if(isTouchDevice()) return;
   if(!hasSortable()) return;
   if($taskList){
     Sortable.create($taskList, {
@@ -538,7 +537,7 @@ function setupDragHandlers(li, listType, index){
 }
 function renderTasks(){
   $taskList.innerHTML='';
-  tasks.forEach((t)=>{
+  tasks.forEach((t, index)=>{
     const card = document.createElement('div');
     card.className = 'task-card';
     card.dataset.id = t.id;
@@ -579,6 +578,7 @@ function renderTasks(){
     card.appendChild(stat);
     
     card.addEventListener('click', ()=>{ selectTask(t.id); });
+    setupDragHandlers(card, 'tasks', index);
     $taskList.appendChild(card);
   });
   updateActiveTaskDisplay();
