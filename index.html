@@ -11,6 +11,7 @@
     <header>
       <h1 id="mainTitle">Rainodoro</h1>
       <div class="header-buttons">
+        <button id="printSessionBtn" class="header-btn" title="Print Session Summary">📋 Summary</button>
         <button id="infoToggle" class="header-btn" title="About Rainodoro">ℹ</button>
         <button id="focusToggle" class="focus-toggle header-btn" title="Ultra Focus Mode">Ultra Focus Mode</button>
       </div>
@@ -134,9 +135,26 @@
     <footer>
       <span id="buildVersion" class="build-version" aria-label="Build version"></span>
     </footer>
+
+    <div id="sessionModal" class="session-modal" style="display:none">
+      <div class="session-modal-content">
+        <div class="session-modal-header">
+          <h2>Pomodoro Session Summary</h2>
+          <button class="modal-close" id="closeSessionModal">✕</button>
+        </div>
+        <div class="session-modal-body">
+          <div id="sessionSummaryContent" style="color:#e6eef6;font-size:13px;line-height:1.8"></div>
+        </div>
+        <div class="session-modal-footer">
+          <button id="printSessionPdfBtn" class="modal-btn primary-btn">🖨 Print / PDF</button>
+          <button id="clearSessionBtn" class="modal-btn secondary-btn">Clear History</button>
+          <button id="closeSessionModalBtn" class="modal-btn">Close</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <script src="app.js?v=20260220l"></script>
+  <script src="app.js?v=20260220m"></script>
 </body>
 </html>

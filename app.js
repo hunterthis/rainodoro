@@ -50,11 +50,81 @@ const BUDGETS_KEY = 'rainodoro_budgets_v1';
 const POURS_KEY = 'rainodoro_pours_v1';
 const TIMER_STATE_KEY = 'rainodoro_timer_v1';
 const BREAK_PLUS_TEN_KEY = 'rainodoro_break_plus_ten_v1';
+const SESSION_HISTORY_KEY = 'rainodoro_session_history_v1';
 
 // WebAudio rain noise
 let audioCtx, rainGain, rainSource;
 let masterVolume = 0.18;
 let breakPlusTenActivated = false;
+let sessionStart = Date.now();
+let sessionHistory = [];
+function recordSessionEvent(type, title, duration, breakDuration){
+  try{
+    const event = {
+      timestamp: Date.now(),
+      type: type,
+      title: title,
+      duration: duration,
+      breakDuration: breakDuration || null
+    };
+    sessionHistory.push(event);
+    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(sessionHistory));
+  }catch(e){}
+}
+function loadSessionHistory(){
+  try{
+    const raw = localStorage.getItem(SESSION_HISTORY_KEY);
+    sessionHistory = raw ? JSON.parse(raw) : [];
+  }catch(e){ sessionHistory = []; }
+}
+function clearSessionHistory(){
+  sessionHistory = [];
+  try{ localStorage.removeItem(SESSION_HISTORY_KEY) }catch(e){}
+  sessionStart = Date.now();
+}
+function formatDuration(seconds){
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
+function generateSessionSummary(){
+  if(sessionHistory.length === 0){
+    return '<p>No completed pomodoros yet. Start a session to track your progress!</p>';
+  }
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<tr style="border-bottom:1px solid rgba(78,168,222,0.2);padding:8px 0"><th style="text-align:left;padding:6px">Type</th><th style="text-align:left;padding:6px">Title</th><th style="text-align:left;padding:6px">Duration</th><th style="text-align:left;padding:6px">Time</th></tr>';
+  
+  let totalPomoTime = 0;
+  let totalBreakTime = 0;
+  let completedPomos = 0;
+  
+  sessionHistory.forEach(event => {
+    const date = new Date(event.timestamp);
+    const timeStr = date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const durationStr = formatDuration(event.duration);
+    const type = event.type === 'pomodoro' ? '🍅 Pomodoro' : '☕ Break';
+    
+    html += `<tr style="border-bottom:1px solid rgba(78,168,222,0.1);"><td style="padding:6px">${type}</td><td style="padding:6px">${event.title}</td><td style="padding:6px">${durationStr}</td><td style="padding:6px">${timeStr}</td></tr>`;
+    
+    if(event.type === 'pomodoro'){
+      totalPomoTime += event.duration;
+      completedPomos++;
+    } else {
+      totalBreakTime += event.duration;
+    }
+  });
+  
+  html += '</table>';
+  html += `<div style="margin-top:16px;padding:12px;background:rgba(78,168,222,0.1);border-radius:6px">
+    <p style="margin:0 0 8px 0"><strong>📊 Session Stats</strong></p>
+    <p style="margin:4px 0">Total Pomodoros: ${completedPomos}</p>
+    <p style="margin:4px 0">Total Pomodoro Time: ${formatDuration(totalPomoTime)}</p>
+    <p style="margin:4px 0">Total Break Time: ${formatDuration(totalBreakTime)}</p>
+    <p style="margin:4px 0">Session Started: ${new Date(sessionStart).toLocaleString()}</p>
+  </div>`;
+  
+  return html;
+}
 function initAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -199,12 +269,23 @@ function handlePomodoroCompletion(){
 }
 
 function onBreakFinished(){
+  const breakDuration = timerState[currentMode].duration;
   if(currentMode === 'short'){
     const item = breaks.short.find(x=>x.id===activeShortBreakId);
-    if(item){ item.completed = (item.completed||0) + 1; saveBreaks(); renderBreaks(); }
+    if(item){ 
+      item.completed = (item.completed||0) + 1;
+      recordSessionEvent('break', item.title || 'Short Break', breakDuration, breakDuration);
+      saveBreaks();
+      renderBreaks();
+    }
   } else if(currentMode === 'long'){
     const item = breaks.long.find(x=>x.id===activeLongBreakId);
-    if(item){ item.completed = (item.completed||0) + 1; saveBreaks(); renderBreaks(); }
+    if(item){
+      item.completed = (item.completed||0) + 1;
+      recordSessionEvent('break', item.title || 'Long Break', breakDuration, breakDuration);
+      saveBreaks();
+      renderBreaks();
+    }
   }
   saveTimerState();
 }
@@ -548,7 +629,19 @@ if($longDec) $longDec.addEventListener('click', ()=>{ budgets.long = Math.max(0,
 if($longInc) $longInc.addEventListener('click', ()=>{ budgets.long++; saveBudgets(); renderBudgets(); });
 
 // When a pomodoro finishes, attribute to active task if present
-function onPomodoroFinished(){ if(activeTaskId){ const t = tasks.find(x=>x.id===activeTaskId); if(t){ t.completed = (t.completed||0) + 1; saveTasks(); renderTasks(); } } saveTimerState(); }
+function onPomodoroFinished(){
+  if(activeTaskId){
+    const t = tasks.find(x=>x.id===activeTaskId);
+    if(t){
+      t.completed = (t.completed||0) + 1;
+      const actualDuration = timerState.pomodoro.duration;
+      recordSessionEvent('pomodoro', t.title, actualDuration, null);
+      saveTasks();
+      renderTasks();
+    }
+  }
+  saveTimerState();
+}
 
 // update tick to call onPomodoroFinished when finishing a pomodoro
 function tick(){
@@ -689,6 +782,53 @@ const $timerToggle = document.getElementById('timerToggle');
 if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; }); }
 
 if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishCurrentItem); }
+
+// Session history/summary
+loadSessionHistory();
+const $printSessionBtn = document.getElementById('printSessionBtn');
+const $sessionModal = document.getElementById('sessionModal');
+const $sessionSummaryContent = document.getElementById('sessionSummaryContent');
+const $closeSessionModal = document.getElementById('closeSessionModal');
+const $closeSessionModalBtn = document.getElementById('closeSessionModalBtn');
+const $printSessionPdfBtn = document.getElementById('printSessionPdfBtn');
+const $clearSessionBtn = document.getElementById('clearSessionBtn');
+
+if($printSessionBtn && $sessionModal){
+  $printSessionBtn.addEventListener('click', ()=>{
+    $sessionSummaryContent.innerHTML = generateSessionSummary();
+    $sessionModal.style.display = 'flex';
+  });
+}
+
+if($closeSessionModal){
+  $closeSessionModal.addEventListener('click', ()=>{ $sessionModal.style.display = 'none'; });
+}
+
+if($closeSessionModalBtn){
+  $closeSessionModalBtn.addEventListener('click', ()=>{ $sessionModal.style.display = 'none'; });
+}
+
+if($printSessionPdfBtn){
+  $printSessionPdfBtn.addEventListener('click', ()=>{
+    window.print();
+  });
+}
+
+if($clearSessionBtn){
+  $clearSessionBtn.addEventListener('click', ()=>{
+    if(confirm('Clear all session history? This cannot be undone.')){
+      clearSessionHistory();
+      $sessionSummaryContent.innerHTML = '<p>Session history cleared.</p>';
+      setTimeout(()=>{ $sessionModal.style.display = 'none'; }, 1500);
+    }
+  });
+}
+
+if($sessionModal){
+  $sessionModal.addEventListener('click', (e)=>{
+    if(e.target === $sessionModal) $sessionModal.style.display = 'none';
+  });
+}
 
 const $buildVersion = document.getElementById('buildVersion');
 if($buildVersion){
