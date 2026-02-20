@@ -125,6 +125,23 @@ function updateFinishButtonLabel(){
   }
 }
 
+function updateFinishButtonState(){
+  if(!$finishTaskBtn) return;
+  if(currentMode === 'pomodoro'){
+    $finishTaskBtn.disabled = !activeTaskId;
+    return;
+  }
+  if(currentMode === 'short'){
+    $finishTaskBtn.disabled = !activeShortBreakId;
+    return;
+  }
+  if(currentMode === 'long'){
+    $finishTaskBtn.disabled = !activeLongBreakId;
+    return;
+  }
+  $finishTaskBtn.disabled = true;
+}
+
 function setMode(newMode, options = {}){
   const {reset = false, statusText = ''} = options;
   if(!timerState[newMode]) return;
@@ -143,6 +160,7 @@ function setMode(newMode, options = {}){
   updateFormsVisibility();
   updateActiveTaskDisplay();
   updateFinishButtonLabel();
+  updateFinishButtonState();
   saveTimerState();
 }
 
@@ -394,6 +412,7 @@ function updateActiveTaskDisplay(){
     if(!it){ $activeTaskDisplay.textContent='No item selected'; return }
     $activeTaskDisplay.textContent = it.text;
   }
+  updateFinishButtonState();
 }
 
 function loadBreaks(){ try{ const raw=localStorage.getItem(BREAKS_KEY); breaks = raw ? JSON.parse(raw) : {short:[], long:[]}; }catch(e){ breaks={short:[], long:[]} } renderBreaks(); }
@@ -412,8 +431,8 @@ function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setu
   left.appendChild(title); left.appendChild(meta);
   const actions=document.createElement('div'); actions.className='task-actions';
   const selectBtn=document.createElement('button'); selectBtn.textContent = (it.id===activeShortBreakId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ activeShortBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.short = breaks.short.filter(x=>x.id!==it.id); if(activeShortBreakId===it.id) activeShortBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
+  selectBtn.addEventListener('click', ()=>{ activeShortBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
+  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.short = breaks.short.filter(x=>x.id!==it.id); if(activeShortBreakId===it.id) activeShortBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
   actions.appendChild(selectBtn); actions.appendChild(del);
   li.appendChild(left); li.appendChild(actions);
   setupDragHandlers(li, 'shortBreaks', index);
@@ -432,8 +451,8 @@ function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setu
   left.appendChild(title); left.appendChild(meta);
   const actions=document.createElement('div'); actions.className='task-actions';
   const selectBtn=document.createElement('button'); selectBtn.textContent = (it.id===activeLongBreakId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ activeLongBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.long = breaks.long.filter(x=>x.id!==it.id); if(activeLongBreakId===it.id) activeLongBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); });
+  selectBtn.addEventListener('click', ()=>{ activeLongBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
+  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.long = breaks.long.filter(x=>x.id!==it.id); if(activeLongBreakId===it.id) activeLongBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
   actions.appendChild(selectBtn); actions.appendChild(del);
   li.appendChild(left); li.appendChild(actions);
   setupDragHandlers(li, 'longBreaks', index);
@@ -518,6 +537,7 @@ disableRainAnimation();
 // ensure forms match the loaded mode on startup
 updateFormsVisibility();
 updateFinishButtonLabel();
+updateFinishButtonState();
 window.addEventListener('beforeunload', saveTimerState);
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',e=>{
