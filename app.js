@@ -186,6 +186,7 @@ function updateDisplay(){
 
 function dispatchTimerTick(){
   const pct = Math.max(0, (duration - remaining) / duration);
+  console.log('[app.js] Dispatching timer-tick:', { remaining, duration, percentage: pct });
   const tickEvent = new CustomEvent('timer-tick', {
     detail: {
       remaining: remaining,

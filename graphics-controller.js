@@ -137,10 +137,11 @@ class GraphicsController {
   }
   
   onTimerTick(event) {
-    console.log('[GraphicsController] onTimerTick called!', event); // Add this first
+    const timestamp = Date.now();
+    console.log(`[GraphicsController @ ${timestamp}] onTimerTick called!`);
     
     const detail = event.detail;
-    console.log('[GraphicsController] Event detail:', {
+    console.log(`[GraphicsController @ ${timestamp}] Event detail:`, {
       percentage: detail.percentage,
       remaining: detail.remaining,
       total: detail.total,
@@ -152,7 +153,7 @@ class GraphicsController {
     this.totalDuration = detail.total;
     this.mode = detail.mode;
 
-    console.log('[GraphicsController] After assignment:', {
+    console.log(`[GraphicsController @ ${timestamp}] After assignment:`, {
       fillPercentage: this.fillPercentage,
       remaining: this.remaining,
       total: this.totalDuration,
@@ -285,9 +286,10 @@ class GraphicsController {
     // Draw water level fill from bottom (fills browser viewport)
     const fillHeight = (this.fillPercentage * h);
     
-    // Debug logging (throttled to once per second)
-    if (!this.lastLogTime || Date.now() - this.lastLogTime > 1000) {
-      console.log('[GraphicsController] Drawing water:', {
+    // Debug logging (throttled to once per 2 seconds)
+    if (!this.lastLogTime || Date.now() - this.lastLogTime > 2000) {
+      const timestamp = Date.now();
+      console.log(`[GraphicsController @ ${timestamp}] Drawing water:`, {
         fillPercentage: this.fillPercentage,
         fillPercentagePercent: (this.fillPercentage * 100).toFixed(2) + '%',
         fillHeight: fillHeight,
