@@ -584,47 +584,94 @@ function renderBreaks(){
     setupListDropZone($longBreakList, 'longBreaks');
     $longBreakList.innerHTML='';
   }
-  breaks.short.forEach((it, index)=>{ const li=document.createElement('li');
-  li.dataset.id=it.id;
-  const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
-  const title=document.createElement('div'); title.textContent=it.text;
-  const meta=document.createElement('div'); meta.className='task-meta';
-  const targetWrap = document.createElement('div'); targetWrap.className = 'target-controls';
-  const minus = document.createElement('button'); minus.textContent = '−'; minus.title = 'Decrease target'; minus.addEventListener('click', ()=>{ changeBreakTarget('short', it.id, -1); });
-  const targetSpan = document.createElement('span'); targetSpan.textContent = `${it.completed || 0}/${it.target || 1}`;
-  const plus = document.createElement('button'); plus.textContent = '+'; plus.title = 'Increase target'; plus.addEventListener('click', ()=>{ changeBreakTarget('short', it.id, 1); });
-  targetWrap.appendChild(minus); targetWrap.appendChild(targetSpan); targetWrap.appendChild(plus);
-  meta.appendChild(targetWrap);
-  left.appendChild(title); left.appendChild(meta);
-  const actions=document.createElement('div'); actions.className='task-actions';
-  const selectBtn=document.createElement('button'); selectBtn.textContent = (it.id===activeShortBreakId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ activeShortBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.short = breaks.short.filter(x=>x.id!==it.id); if(activeShortBreakId===it.id) activeShortBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions);
-  setupDragHandlers(li, 'shortBreaks', index);
-  if($shortBreakList) $shortBreakList.appendChild(li); });
+  
+  // Render short breaks as grid cards
+  breaks.short.forEach((it, index)=>{
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.id = it.id;
+    if(it.id === activeShortBreakId) card.classList.add('selected');
+    
+    const title = document.createElement('div');
+    title.className = 'task-card-title';
+    title.textContent = it.text;
+    
+    const stat = document.createElement('div');
+    stat.className = 'task-card-stat';
+    stat.textContent = `${it.completed || 0}/${it.target || 1}`;
+    
+    card.appendChild(title);
+    card.appendChild(stat);
+    
+    card.addEventListener('click', ()=>{
+      activeShortBreakId = it.id;
+      saveBreaks();
+      renderBreaks();
+      updateActiveTaskDisplay();
+      updateFinishButtonState();
+    });
+    
+    // Right-click to delete
+    card.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      const confirmed = confirm(`Delete break item "${it.text}"?`);
+      if(!confirmed) return;
+      breaks.short = breaks.short.filter(x=>x.id!==it.id);
+      if(activeShortBreakId===it.id) activeShortBreakId=null;
+      saveBreaks();
+      renderBreaks();
+      updateActiveTaskDisplay();
+      updateFinishButtonState();
+    });
+    
+    setupDragHandlers(card, 'shortBreaks', index);
+    if($shortBreakList) $shortBreakList.appendChild(card);
+  });
+  
+  // Render long breaks as grid cards
   if(!$longBreakList) return;
-  breaks.long.forEach((it, index)=>{ const li=document.createElement('li');
-  li.dataset.id=it.id;
-  const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
-  const title=document.createElement('div'); title.textContent=it.text;
-  const meta=document.createElement('div'); meta.className='task-meta';
-  const targetWrap = document.createElement('div'); targetWrap.className = 'target-controls';
-  const minus = document.createElement('button'); minus.textContent = '−'; minus.title = 'Decrease target'; minus.addEventListener('click', ()=>{ changeBreakTarget('long', it.id, -1); });
-  const targetSpan = document.createElement('span'); targetSpan.textContent = `${it.completed || 0}/${it.target || 1}`;
-  const plus = document.createElement('button'); plus.textContent = '+'; plus.title = 'Increase target'; plus.addEventListener('click', ()=>{ changeBreakTarget('long', it.id, 1); });
-  targetWrap.appendChild(minus); targetWrap.appendChild(targetSpan); targetWrap.appendChild(plus);
-  meta.appendChild(targetWrap);
-  left.appendChild(title); left.appendChild(meta);
-  const actions=document.createElement('div'); actions.className='task-actions';
-  const selectBtn=document.createElement('button'); selectBtn.textContent = (it.id===activeLongBreakId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ activeLongBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.long = breaks.long.filter(x=>x.id!==it.id); if(activeLongBreakId===it.id) activeLongBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions);
-  setupDragHandlers(li, 'longBreaks', index);
-  $longBreakList.appendChild(li); }); }
+  breaks.long.forEach((it, index)=>{
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.id = it.id;
+    if(it.id === activeLongBreakId) card.classList.add('selected');
+    
+    const title = document.createElement('div');
+    title.className = 'task-card-title';
+    title.textContent = it.text;
+    
+    const stat = document.createElement('div');
+    stat.className = 'task-card-stat';
+    stat.textContent = `${it.completed || 0}/${it.target || 1}`;
+    
+    card.appendChild(title);
+    card.appendChild(stat);
+    
+    card.addEventListener('click', ()=>{
+      activeLongBreakId = it.id;
+      saveBreaks();
+      renderBreaks();
+      updateActiveTaskDisplay();
+      updateFinishButtonState();
+    });
+    
+    // Right-click to delete
+    card.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      const confirmed = confirm(`Delete break item "${it.text}"?`);
+      if(!confirmed) return;
+      breaks.long = breaks.long.filter(x=>x.id!==it.id);
+      if(activeLongBreakId===it.id) activeLongBreakId=null;
+      saveBreaks();
+      renderBreaks();
+      updateActiveTaskDisplay();
+      updateFinishButtonState();
+    });
+    
+    setupDragHandlers(card, 'longBreaks', index);
+    $longBreakList.appendChild(card);
+  });
+}
 
 // Budget persistence (pomodoro, short, long counts)
 function loadBudgets(){ try{ const raw=localStorage.getItem(BUDGETS_KEY); budgets = raw ? JSON.parse(raw) : {pomodoro:0,short:0,long:0}; }catch(e){ budgets={pomodoro:0,short:0,long:0}; } renderBudgets(); }

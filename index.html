@@ -42,7 +42,7 @@
         <form id="taskForm" style="display:flex;gap:6px;margin-bottom:10px">
           <input id="taskTitle" placeholder="New task title" required style="flex:1" />
           <button type="submit" class="timer-toggle-btn">Add</button>
-          <button id="deleteTaskBtn" type="button" class="timer-toggle-btn" style="background:#e74c3c;display:none">Delete</button>
+          <button id="deleteTaskBtn" type="button" class="timer-toggle-btn" style="display:none">Delete</button>
         </form>
         <div id="taskList" class="task-grid"></div>
       </div>
@@ -57,7 +57,7 @@
           </div>
         </div>
         <form id="shortBreakForm" style="display:flex;gap:6px;margin-bottom:10px"><input id="shortBreakInput" placeholder="Add break item" style="flex:1" /><button type="submit" class="timer-toggle-btn">Add</button></form>
-        <ul id="shortBreakList" class="break-list"></ul>
+        <div id="shortBreakList" class="task-grid"></div>
       </div>
     </aside>
 
