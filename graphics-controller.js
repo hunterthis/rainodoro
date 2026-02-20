@@ -1,10 +1,10 @@
-// Graphics Controller - Handles 8-bit style immersive animations
+// Graphics Controller - Handles viewport-fill animations with ripple/bubble effects
 class GraphicsController {
   constructor() {
+    this.host = document.getElementById('immersive-host');
     this.canvas = document.getElementById('immersive-canvas');
     this.ctx = this.canvas.getContext('2d');
     this.timerOverlay = document.getElementById('immersive-timer-overlay');
-    this.host = document.getElementById('immersive-host');
     this.animationFrameId = null;
     this.isRunning = false;
     this.isActive = false;
@@ -15,34 +15,20 @@ class GraphicsController {
     this.remaining = 0;
     this.totalDuration = 0;
     this.mode = 'pomodoro';
-    this.previousMode = null;
-    
-    // Internal resolution for 8-bit look
-    this.baseWidth = 320;
-    this.baseHeight = 180;
-    this.scale = 1;
-    this.pixelSize = 1;
+    this.previousWaterHeight = 0;
     
     // Soft pastel palette
     this.palette = {
       bg: '#0b1020',
       water: '#5dbdff',
-      rain: '#e6eef6',
-      accent: '#ff9aa2'
+      waterDark: '#4d9eff',
+      rainColor: '#e6eef6'
     };
     
-    // Rain particles
+    // Rain particles for fullscreen
     this.raindrops = [];
-    this.maxRaindrops = 50;
+    this.maxRaindrops = 120;
     this.initRaindrops();
-    
-    // Floating particles
-    this.particles = [];
-    this.maxParticles = 30;
-    this.initParticles();
-    
-    // Animation mode
-    this.animationMode = 'rain'; // 'rain' or 'particles'
     
     // Time tracking
     this.lastTickTime = Date.now();
@@ -53,6 +39,7 @@ class GraphicsController {
     this.onTimerStart = this.onTimerStart.bind(this);
     this.onTimerStop = this.onTimerStop.bind(this);
     this.onTimerPause = this.onTimerPause.bind(this);
+    
     document.addEventListener('timer-tick', this.onTimerTick);
     document.addEventListener('timer-finished', this.onTimerFinish);
     document.addEventListener('timer-started', this.onTimerStart);
@@ -119,15 +106,13 @@ class GraphicsController {
     // Set canvas to fill viewport
     this.canvas.width = w;
     this.canvas.height = h;
-    
-    // Apply pixelated rendering
-    this.ctx.imageSmoothingEnabled = false;
-    this.canvas.style.imageRendering = 'pixelated';
+    this.ctx.imageSmoothingEnabled = true;
   }
   
   onWindowResize() {
     if (this.isActive) {
       this.calculateScale();
+      this.initRaindrops();
     }
   }
   
@@ -137,9 +122,19 @@ class GraphicsController {
     this.remaining = detail.remaining;
     this.totalDuration = detail.total;
     this.mode = detail.mode;
-    
-    // Update timer overlay
+
     this.updateTimerOverlay();
+
+    const pct = this.fillPercentage * 100;
+    if (this.isActive && this.timerIsRunning) {
+      if (Math.abs(pct - this.previousWaterHeight) > 0.2) {
+        this.createRipple();
+      }
+      if (pct > 10 && Math.random() > 0.3) {
+        this.createBubble();
+      }
+    }
+    this.previousWaterHeight = pct;
   }
   
   onTimerFinish() {
@@ -152,16 +147,12 @@ class GraphicsController {
   
   onTimerStart() {
     this.timerIsRunning = true;
-    if (this.isActive) {
-      this.startAnimation();
-    }
+    // Animation already running from enterAnimation, just enable rain movement
   }
   
   onTimerPause() {
     this.timerIsRunning = false;
-    if (this.isActive) {
-      this.stopAnimation();
-    }
+    // Keep animation running to show fill level, just stop rain movement
   }
   
   onTimerStop() {
@@ -170,8 +161,9 @@ class GraphicsController {
       this.exitAnimation();
     }
   }
-  
+
   updateTimerOverlay() {
+    if (!this.timerOverlay) return;
     const mins = Math.floor(this.remaining / 60);
     const secs = this.remaining % 60;
     const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -185,8 +177,8 @@ class GraphicsController {
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
         vx: (Math.random() - 0.5) * 0.3,
-        vy: Math.random() * 1 + 0.5,
-        length: Math.random() * 3 + 2,
+        vy: Math.random() * 4 + 5,
+        length: Math.random() * 8 + 8,
         width: 1,
         depth: Math.random(),
         opacity: 0.3 + Math.random() * 0.7
@@ -195,20 +187,7 @@ class GraphicsController {
   }
   
   initParticles() {
-    this.particles = [];
-    for (let i = 0; i < this.maxParticles; i++) {
-      this.particles.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        size: Math.random() * 1.5 + 0.5,
-        depth: Math.random(),
-        opacity: 0.4 + Math.random() * 0.6,
-        angle: Math.random() * Math.PI * 2,
-        rotationSpeed: (Math.random() - 0.5) * 0.02
-      });
-    }
+    // No particles needed - only ripples and bubbles via DOM
   }
   
   updateRaindrops(deltaTime) {
@@ -235,33 +214,38 @@ class GraphicsController {
   }
   
   updateParticles(deltaTime) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    // No particles - ripples and bubbles are DOM elements
+  }
+  
+  createRipple() {
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    const size = Math.random() * 24 + 12;
+    ripple.style.width = size + 'px';
+    ripple.style.height = size + 'px';
+    ripple.style.left = Math.random() * 100 + '%';
+    ripple.style.top = (Math.random() * 60 + 20) + '%';
+    ripple.style.pointerEvents = 'none';
+    ripple.style.animation = 'ripple 0.8s ease-out forwards';
+    this.host.appendChild(ripple);
     
-    for (let p of this.particles) {
-      // Gentle vortex-like movement
-      const angle = Math.atan2(h / 2 - p.y, w / 2 - p.x);
-      const vortexStrength = 0.1;
-      p.vx += Math.cos(angle) * vortexStrength * 0.01;
-      p.vy += Math.sin(angle) * vortexStrength * 0.01;
-      
-      // Damping
-      p.vx *= 0.99;
-      p.vy *= 0.99;
-      
-      // Position update
-      p.x += p.vx;
-      p.y += p.vy;
-      
-      // Wrap edges
-      if (p.x < 0) p.x = w;
-      if (p.x > w) p.x = 0;
-      if (p.y < 0) p.y = h;
-      if (p.y > h) p.y = 0;
-      
-      // Rotation
-      p.angle += p.rotationSpeed;
-    }
+    setTimeout(() => ripple.remove(), 800);
+  }
+  
+  createBubble() {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const size = Math.random() * 4 + 2.5;
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = (Math.random() * 90 + 5) + '%';
+    bubble.style.bottom = '8%';
+    bubble.style.pointerEvents = 'none';
+    const duration = Math.random() * 1 + 1;
+    bubble.style.animation = `bubble-rise ${duration}s ease-in forwards`;
+    this.host.appendChild(bubble);
+    
+    setTimeout(() => bubble.remove(), 2000);
   }
   
   drawRainAnimation() {
@@ -275,22 +259,22 @@ class GraphicsController {
     // Draw water level fill from bottom (fills browser viewport)
     const fillHeight = (this.fillPercentage * h);
     
-    // Dithered gradient effect
-    for (let y = h - fillHeight; y < h; y++) {
-      const gradientFactor = (h - y) / fillHeight;
-      
-      // Soft dither pattern for 8-bit look
-      if ((y + Math.floor(Date.now() / 100)) % 2 === 0) {
-        this.ctx.fillStyle = this.palette.water;
-      } else {
-        this.ctx.fillStyle = '#4d9eff';
-      }
-      
-      this.ctx.fillRect(0, y, w, 1);
+    this.ctx.fillStyle = this.palette.water;
+    this.ctx.fillRect(0, h - fillHeight, w, fillHeight);
+    
+    // Draw water wave effect
+    this.ctx.strokeStyle = this.palette.waterDark;
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    for (let x = 0; x < w; x += 10) {
+      const y = (h - fillHeight) + Math.sin(x * 0.01 + Date.now() * 0.001) * 2;
+      if (x === 0) this.ctx.moveTo(x, y);
+      else this.ctx.lineTo(x, y);
     }
+    this.ctx.stroke();
     
     // Draw raindrops (falling down)
-    this.ctx.strokeStyle = this.palette.rain;
+    this.ctx.strokeStyle = this.palette.rainColor;
     this.ctx.lineCap = 'round';
     this.ctx.lineWidth = 1;
     
@@ -309,6 +293,7 @@ class GraphicsController {
   }
   
   drawParticleAnimation() {
+    // Draw just the water level and rain
     const w = this.canvas.width;
     const h = this.canvas.height;
     
@@ -319,29 +304,33 @@ class GraphicsController {
     // Draw water level fill from bottom
     const fillHeight = (this.fillPercentage * h);
     
-    // Soft dither pattern
-    for (let y = h - fillHeight; y < h; y++) {
-      if ((y + Math.floor(Date.now() / 100)) % 2 === 0) {
-        this.ctx.fillStyle = this.palette.water;
-      } else {
-        this.ctx.fillStyle = '#4d9eff';
-      }
-      
-      this.ctx.fillRect(0, y, w, 1);
-    }
+    this.ctx.fillStyle = this.palette.water;
+    this.ctx.fillRect(0, h - fillHeight, w, fillHeight);
     
-    // Draw particles as small squares/motes
-    for (let p of this.particles) {
-      const opacity = p.opacity * (0.2 + p.depth * 0.8);
+    // Draw water wave effect
+    this.ctx.strokeStyle = this.palette.waterDark;
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    for (let x = 0; x < w; x += 10) {
+      const y = (h - fillHeight) + Math.sin(x * 0.01 + Date.now() * 0.001) * 2;
+      if (x === 0) this.ctx.moveTo(x, y);
+      else this.ctx.lineTo(x, y);
+    }
+    this.ctx.stroke();
+    
+    // Draw raindrops
+    this.ctx.strokeStyle = this.palette.rainColor;
+    this.ctx.lineCap = 'round';
+    this.ctx.lineWidth = 1;
+    
+    for (let drop of this.raindrops) {
+      const opacity = drop.opacity * (0.3 + drop.depth * 0.7);
       this.ctx.globalAlpha = opacity;
-      this.ctx.fillStyle = this.palette.rain;
       
-      const halfSize = p.size / 2;
-      const x = Math.floor(p.x);
-      const y = Math.floor(p.y);
-      
-      // Simple square particle
-      this.ctx.fillRect(x - halfSize, y - halfSize, p.size, p.size);
+      this.ctx.beginPath();
+      this.ctx.moveTo(Math.floor(drop.x), Math.floor(drop.y));
+      this.ctx.lineTo(Math.floor(drop.x), Math.floor(drop.y + drop.length));
+      this.ctx.stroke();
     }
     
     this.ctx.globalAlpha = 1.0;
@@ -352,18 +341,15 @@ class GraphicsController {
     const deltaTime = (now - this.lastTickTime) / 1000;
     this.lastTickTime = now;
     
-    // Update animations
-    this.updateRaindrops(deltaTime);
-    this.updateParticles(deltaTime);
-    
-    // Draw based on animation mode
-    if (this.animationMode === 'rain') {
-      this.drawRainAnimation();
-    } else if (this.animationMode === 'particles') {
-      this.drawParticleAnimation();
+    // Update animations only when timer is running
+    if (this.timerIsRunning) {
+      this.updateRaindrops(deltaTime);
     }
     
-    if (this.isRunning && this.isActive && this.timerIsRunning) {
+    // Always draw the fill level when active (even if paused)
+    this.drawRainAnimation();
+    
+    if (this.isRunning && this.isActive) {
       this.animationFrameId = requestAnimationFrame(() => this.animate());
     }
   }
@@ -372,6 +358,7 @@ class GraphicsController {
     if (this.isRunning) return;
     this.isRunning = true;
     this.lastTickTime = Date.now();
+    // Always render the fill, rain runs only when timer is running
     this.animate();
   }
   
@@ -382,12 +369,6 @@ class GraphicsController {
     this.isRunning = false;
     this.ctx.fillStyle = this.palette.bg;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-  
-  setAnimationMode(mode) {
-    if (['rain', 'particles'].includes(mode)) {
-      this.animationMode = mode;
-    }
   }
 }
 
