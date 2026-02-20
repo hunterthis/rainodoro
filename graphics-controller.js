@@ -89,6 +89,21 @@ class GraphicsController {
     this.isActive = true;
     this.host.classList.remove('immersive-hidden');
     this.calculateScale();
+    
+    // Sync current timer state from app.js
+    if (typeof remaining !== 'undefined') {
+      this.remaining = remaining;
+    }
+    if (typeof duration !== 'undefined') {
+      this.totalDuration = duration;
+      this.fillPercentage = (duration - this.remaining) / duration;
+    }
+    if (typeof currentMode !== 'undefined') {
+      this.mode = currentMode;
+    }
+    
+    // Update overlay with current state
+    this.updateTimerOverlay();
     this.startAnimation();
   }
   
@@ -169,12 +184,17 @@ class GraphicsController {
     const isVisible = window.timerVisible !== false;
     this.timerOverlay.style.display = isVisible ? 'block' : 'none';
     
-    if (isVisible) {
+    if (isVisible && this.remaining !== undefined) {
       const mins = Math.floor(this.remaining / 60);
       const secs = this.remaining % 60;
       const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
       this.timerOverlay.textContent = timeStr;
     }
+  }
+  
+  // Method to force update from external toggle
+  refreshTimerVisibility() {
+    this.updateTimerOverlay();
   }
   
   initRaindrops() {

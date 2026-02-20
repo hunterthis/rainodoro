@@ -833,7 +833,7 @@ if($infoToggle && $infoSection){ $infoToggle.addEventListener('click', ()=>{ con
 
 // timer visibility toggle (available on both pages)
 const $timerToggle = document.getElementById('timerToggle');
-if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; window.timerVisible = timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; }); }
+if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; window.timerVisible = timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; if(window.graphicsController) window.graphicsController.refreshTimerVisibility(); }); }
 
 if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishCurrentItem); }
 
