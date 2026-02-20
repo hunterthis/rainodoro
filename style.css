@@ -153,3 +153,85 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .timer-compact #time{font-size:28px}
   .sidebar{padding:16px 0}
 }
+
+/* Fullscreen Immersive Mode Styles */
+#immersive-host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0b1020;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#immersive-host.immersive-hidden {
+  display: none;
+}
+
+#immersive-host:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+#immersive-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#immersive-timer-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  font-weight: bold;
+  color: #e6eef6;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px rgba(78, 168, 222, 0.5);
+  pointer-events: none;
+  z-index: 100001;
+  letter-spacing: 2px;
+}
+
+#immersive-exit-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #e6eef6;
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 6px;
+  z-index: 100002;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#immersive-host:hover #immersive-exit-btn,
+#immersive-host:fullscreen #immersive-exit-btn {
+  opacity: 1;
+}
+
+#immersive-exit-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media(max-width:768px) {
+  #immersive-timer-overlay {
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+}

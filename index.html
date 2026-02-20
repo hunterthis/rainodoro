@@ -12,6 +12,7 @@
       <h1 id="mainTitle">Rainodoro</h1>
       <div class="header-buttons">
         <button id="infoToggle" class="header-btn" title="About Rainodoro">ℹ</button>
+        <button id="fullscreenToggle" class="header-btn" title="Fullscreen Bucket Mode">⛶</button>
         <button id="focusToggle" class="focus-toggle header-btn" title="Ultra Focus Mode">Ultra Focus Mode</button>
       </div>
     </header>
@@ -153,9 +154,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Fullscreen Immersive Mode -->
+    <div id="immersive-host" class="immersive-hidden">
+      <canvas id="immersive-canvas"></canvas>
+      <div id="immersive-timer-overlay" class="immersive-timer-display"></div>
+      <button id="immersive-exit-btn" class="immersive-exit-btn" title="Exit fullscreen">✕</button>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="graphics-controller.js?v=20260220p"></script>
   <script src="app.js?v=20260220p"></script>
 </body>
 </html>
