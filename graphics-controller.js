@@ -341,28 +341,14 @@ class GraphicsController {
     const deltaTime = (now - this.lastTickTime) / 1000;
     this.lastTickTime = now;
     
-    // Sync with current timer state from window every frame for animation
+    // Sync running state from window (water level syncs from timer-tick event)
     if (window.timerState) {
-      this.remaining = window.timerState.remaining;
-      this.totalDuration = window.timerState.duration;
-      this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
-      this.mode = window.timerState.currentMode;
       this.timerIsRunning = window.timerState.isRunning;
     }
     
     // Update animations only when timer is running
     if (this.timerIsRunning) {
       this.updateRaindrops(deltaTime);
-      
-      // Create ripples and bubbles based on fill changes
-      const pct = this.fillPercentage * 100;
-      if (this.isActive && Math.abs(pct - this.previousWaterHeight) > 0.2) {
-        this.createRipple();
-      }
-      if (this.isActive && pct > 10 && Math.random() > 0.3) {
-        this.createBubble();
-      }
-      this.previousWaterHeight = pct;
     }
     
     // Always draw the fill level when active (even if paused)
