@@ -5,9 +5,9 @@
   --muted:#9aa4b2;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021 0%,#0b1320 100%);color:#e6eef6;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021 0%,#0b1320 100%);color:#e6eef6;display:flex;min-height:100vh;align-items:center;justify-content:center}
 .app{width:920px;max-width:95%;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
-.app.focus-mode{width:100%;max-width:100%;padding:0;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+.app.focus-mode{width:100%;max-width:100%;padding:0;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
 header{display:flex;justify-content:space-between;align-items:center;position:relative}
 .app.focus-mode header{justify-content:center}
 h1{margin:0;font-size:28px}
@@ -30,78 +30,66 @@ h1{margin:0;font-size:28px}
 .mode.active{background:var(--accent);color:#041024;border:none}
 .timer{flex:1;text-align:center}
 #time{font-size:48px;font-weight:600}
-.buttons{display:flex;gap:12px;justify-content:center;margin-top:8px}
-.buttons button{padding:10px 14px;border-radius:10px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;touch-action:manipulation}
+.buttons{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.buttons button{padding:8px 12px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer}
 .settings{display:flex;flex-direction:column;gap:6px;color:var(--muted);align-items:flex-start}
 .settings label{display:flex;align-items:center;gap:8px}
-.settings input[type="range"]{width:140px}
-.mute-btn{padding:8px 14px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s;touch-action:manipulation}
+.settings input[type="range"]{width:120px}
+.mute-btn{padding:6px 12px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s}
 .mute-btn:hover{background:#1f3d52}
 .visual{margin-top:22px;display:flex;gap:18px;align-items:center}
 .sidepanel{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
  .timer-compact{background:transparent;padding:10px;border-radius:8px;min-width:140px;text-align:center}
 .timer-compact #time{font-size:28px;font-weight:600}
-.timer-compact .buttons{display:flex;flex-direction:column;gap:12px;justify-content:flex-start;margin-top:8px;align-items:stretch}
-.timer-compact .buttons button{padding:10px 12px;border-radius:10px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%;touch-action:manipulation}
+.timer-compact .buttons{display:flex;flex-direction:column;gap:8px;justify-content:flex-start;margin-top:8px;align-items:stretch}
+.timer-compact .buttons button{padding:8px 10px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%}
 .timer-compact .buttons button:disabled{background:#0a1020;color:#4a5a6a;cursor:not-allowed;opacity:0.5}
 .timer-compact{min-width:120px}
 .settings label{display:flex;align-items:center;gap:8px}
 .settings input[type="range"]{width:120px}
 .pour-btn{display:inline-block}
 
-.app.focus-mode .visual{margin:0;flex-direction:column;justify-content:center;gap:32px;flex:1}
+.app.focus-mode .visual{margin:0;flex-direction:column;justify-content:center;gap:32px}
 .app.focus-mode .sidepanel{display:flex;flex-direction:column;align-items:center}
 .app.focus-mode .timer-compact{min-width:auto}
 .app.focus-mode .active-task{font-size:24px;color:#e6eef6;font-weight:600;margin-top:24px}
 .app.focus-mode .status{margin:0;font-size:14px}
 .app.focus-mode .pour-stats{display:none}
 .app.focus-mode .section form,.app.focus-mode .controls,.app.focus-mode .sidebar{display:none}
-.sidebar{float:right;width:300px;margin-left:18px;padding:0;background:transparent;border-radius:8px}
+ .sidebar{float:right;width:300px;margin-left:18px;padding:0;background:transparent;border-radius:8px}
 .section{margin-bottom:16px}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .section-header h3{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#e6eef6}
 .section-controls{display:flex;align-items:center;gap:6px}
-.count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px;min-height:32px;touch-action:manipulation}
+.count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
 .count-display{font-size:12px;color:var(--muted);min-width:20px;text-align:center}
 .task-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:220px;overflow:auto}
-.task-list li{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:8px;min-height:44px}
+ .task-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
  .task-list li.draggable-item{cursor:grab}
  .task-list li.draggable-item:active{cursor:grabbing}
  .task-list li.dragging{opacity:0.5;border-color:rgba(78,168,222,0.4);background:rgba(78,168,222,0.06)}
  .task-meta{font-size:12px;color:var(--muted);margin-left:8px;display:flex;align-items:center;gap:8px}
-.task-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-.task-actions button{margin-left:0;padding:8px 10px;border-radius:8px;border:none;background:#153547;color:#eaf6ff;touch-action:manipulation;min-width:64px}
+ .task-actions button{margin-left:6px;padding:6px 8px;border-radius:6px;border:none;background:#153547;color:#eaf6ff}
  .target-controls{display:inline-flex;align-items:center;gap:8px}
  .target-controls button{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer}
  .target-controls span{font-size:12px;color:var(--muted)}
 .breaks{margin-top:8px}
 .break-section{margin-bottom:10px}
 .break-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:220px;overflow:auto}
-.break-list li{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:8px;min-height:44px}
+ .break-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
  .break-list li.draggable-item{cursor:grab}
  .break-list li.draggable-item:active{cursor:grabbing}
  .break-list li.dragging{opacity:0.5;border-color:rgba(78,168,222,0.4);background:rgba(78,168,222,0.06)}
 .reset-pour-btn{padding:2px 4px;border-radius:3px;border:none;background:var(--accent);color:#041024;cursor:pointer;font-size:10px}
-.section form{display:flex;gap:8px;margin-bottom:10px}
-.section input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:16px}
-.section button[type="submit"]{padding:10px 12px;border-radius:8px;border:none;background:var(--accent);color:#041024;cursor:pointer;touch-action:manipulation}
+.section form{display:flex;gap:6px;margin-bottom:10px}
+.section input{flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.section button[type="submit"]{padding:6px 8px;border-radius:6px;border:none;background:var(--accent);color:#041024;cursor:pointer}
 .sidebar > .active-task{margin-bottom:12px;padding:10px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;color:#e6eef6;font-size:24px;font-weight:600}
 .sidepanel .active-task{margin-top:12px;color:#e6eef6;font-size:24px;font-weight:600}
 .pour-stats{margin-top:12px;display:flex;gap:16px;font-size:12px;color:var(--muted)}
 .stat{display:flex;gap:6px}
-.completed-summary{font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:6px}
-.completed-list{list-style:none;padding:6px;margin:0;max-height:160px;overflow:auto;border:1px solid rgba(255,255,255,0.03);border-radius:6px;background:rgba(255,255,255,0.01)}
-.completed-list li{display:flex;justify-content:space-between;padding:6px;border-radius:4px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:12px;color:#e6eef6}
-.completed-list li:last-child{border-bottom:none}
-.tracker-controls{display:flex;gap:8px}
-.tracker-controls .timer-toggle-btn{padding:6px 8px;font-size:12px}
-.panel-small{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.01)}
-.stats-subnav{margin-top:6px}
-.stats-subnav .timer-toggle-btn{padding:6px 8px;font-size:13px}
-.reset-pour-btn{padding:4px 6px;border-radius:6px;border:none;background:#bfe8ff;color:#041024;cursor:pointer;font-size:11px}
-.reset-stat-btn{padding:4px 6px;border-radius:6px;border:none;background:#bfe8ff;color:#041024;cursor:pointer;font-size:11px;margin-left:8px}
-.bucket-wrap{position:relative;width:clamp(180px,40vw,260px);height:clamp(240px,60vw,340px);margin:0 12px;display:flex;align-items:flex-end;justify-content:center}
-.bucket{position:relative;left:auto;right:auto;bottom:auto;margin:0;width:clamp(140px,28vw,200px);height:clamp(200px,50vw,280px);border:6px solid #cfe8ff22;border-bottom-width:32px;border-radius:8px 8px 28px 28px;overflow:hidden;background:linear-gradient(180deg,#0b1b2a, #07121a)}
+.bucket-wrap{position:relative;width:240px;height:320px;margin:0 12px}
+.bucket{position:absolute;left:0;right:0;bottom:0;margin:auto;width:180px;height:240px;border:6px solid #cfe8ff22;border-bottom-width:32px;border-radius:8px 8px 28px 28px;overflow:hidden;background:linear-gradient(180deg,#0b1b2a, #07121a);position:relative}
 .bucket::after{content:'';position:absolute;right:-40px;top:40px;width:40px;height:100px;border:6px solid #cfe8ff22;border-left:none;border-radius:0 20px 20px 0;background:transparent}
 .water{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(180deg,#7ad2ff 0%,#5dbdff 40%,#2ea3ff 100%);transition:height 0.1s ease-out;overflow:hidden}
 .water::before{content:'';position:absolute;top:-2px;left:0;right:0;height:15px;background:linear-gradient(180deg,rgba(255,255,255,0.8) 0%,rgba(255,255,255,0.3) 50%,transparent 100%);animation:wave 2.2s ease-in-out infinite;filter:blur(0.5px)}
@@ -109,7 +97,7 @@ h1{margin:0;font-size:28px}
 .rain-overlay{position:absolute;inset:0;pointer-events:none}
 .ripple{position:absolute;border:2px solid rgba(255,255,255,0.8);border-radius:50%;pointer-events:none;box-shadow:0 0 10px rgba(255,255,255,0.6), inset 0 0 6px rgba(255,255,255,0.4)}
 .bubble{position:absolute;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,1),rgba(150,200,255,0.3));border-radius:50%;pointer-events:none;border:1.5px solid rgba(255,255,255,0.6);box-shadow:0 0 8px rgba(255,255,255,0.5), inset -1px -1px 3px rgba(0,0,0,0.2)}
-.status{display:none}
+.status{color:var(--muted);margin-left:8px}
 footer{margin-top:18px;color:var(--muted);font-size:12px}
 
 /* water animations */
@@ -122,36 +110,17 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 .raindrop{position:absolute;width:2px;height:14px;background:linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0.2));border-radius:2px;display:none}
 
 /* responsive */
-@media(max-width:520px){.app{padding:16px}.controls{flex-direction:column;align-items:stretch}.visual{flex-direction:column;align-items:center;gap:14px}.modes{flex-wrap:wrap;justify-content:center}.buttons{flex-direction:column;align-items:stretch}.timer-compact .buttons{gap:10px}.settings{align-items:stretch}.settings label{justify-content:space-between}.section form{flex-direction:column}.section button[type="submit"]{width:100%}.task-list,.break-list{max-height:none}.sidepanel{align-items:stretch;width:100%}.timer-compact{width:100%}.timer-toggle-btn{font-size:13px}.bucket-wrap{margin:6px 0}.task-actions{width:100%;justify-content:space-between}.task-actions button{flex:1;min-width:0}.task-list li,.break-list li{flex-direction:column;align-items:stretch;gap:8px}.task-meta{margin-top:6px}}
+@media(max-width:520px){.app{padding:16px}.bucket-wrap{width:160px;height:220px}.bucket{width:130px;height:190px}.controls{flex-direction:column;align-items:stretch}.visual{flex-direction:column;align-items:center}}
 
 @media(max-width:640px){
   .visual{flex-direction:column;align-items:center}
-  .sidepanel{align-items:stretch;width:100%}
-  .timer-compact #time{font-size:24px}
-  .header-buttons{gap:6px}
-  .mode{padding:10px 14px}
+  .sidepanel{align-items:center}
+  .bucket-wrap{width:220px;height:280px}
+  .bucket{width:170px;height:220px}
+  .timer-compact #time{font-size:22px}
 }
 
 @media(max-width:920px){
   .app{display:block}
   .sidebar{width:auto;margin-bottom:12px}
 }
-
-@media (prefers-reduced-motion: reduce){
-  .water::before{animation:none}
-  .raindrop,.ripple,.bubble{animation:none}
-  .water{transition:none}
-}
-
-/* Hide Pomo Stats panel and reset / finished controls in Ultra Focus Mode */
-.app.focus-mode #pomoStatsToggle,
-.app.focus-mode #pomoStatsPanel,
-.app.focus-mode #finishTaskBtn,
-.app.focus-mode #reset,
-.app.focus-mode .reset-stat-btn,
-.app.focus-mode .reset-pour-btn{
-  display: none !important;
-}
-
-/* hide info button in Ultra Focus Mode */
-.app.focus-mode #infoToggle{ display:none !important; }
