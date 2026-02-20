@@ -349,28 +349,27 @@ class GraphicsController {
     const deltaTime = (now - this.lastTickTime) / 1000;
     this.lastTickTime = now;
     
-    // Sync water level from window.timerState EVERY FRAME for smooth updates
-    const timerState = window.timerState;
-    if (timerState && timerState.remaining !== undefined && timerState.duration !== undefined) {
-      this.remaining = timerState.remaining;
-      this.totalDuration = timerState.duration;
+    // Read timer values directly from window.pomodoroTimer (live getters)
+    if (window.pomodoroTimer) {
+      this.remaining = window.pomodoroTimer.remaining;
+      this.totalDuration = window.pomodoroTimer.duration;
+      this.timerIsRunning = window.pomodoroTimer.isRunning;
+      this.mode = window.pomodoroTimer.currentMode;
       // Calculate percentage: (elapsed / total) where elapsed = duration - remaining
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
-      this.mode = timerState.currentMode;
-      this.timerIsRunning = timerState.isRunning;
       
       // Debug log every 1 second to see updates
       if (!this.lastLogTime || now - this.lastLogTime > 1000) {
-        console.log('[animate] READ timerState:', {
-          remaining: timerState.remaining,
-          duration: timerState.duration,
+        console.log('[animate] LIVE READ:', {
+          remaining: this.remaining,
+          duration: this.totalDuration,
           fillPct: (this.fillPercentage * 100).toFixed(1) + '%',
-          isRunning: timerState.isRunning
+          isRunning: this.timerIsRunning
         });
         this.lastLogTime = now;
       }
     } else {
-      console.warn('[animate] window.timerState is invalid:', window.timerState);
+      console.warn('[animate] window.pomodoroTimer not available');
     }
     
     // Update animations only when timer is running

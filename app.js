@@ -11,8 +11,13 @@ let remaining = timerState[currentMode].remaining;
 let timerId = null;
 let isRunning = false;
 
-// Expose timer state globally for graphics controller
-window.timerState = { remaining, duration, currentMode, isRunning };
+// Expose timer variables directly on window for live access
+window.pomodoroTimer = {
+  get remaining() { return remaining; },
+  get duration() { return duration; },
+  get isRunning() { return isRunning; },
+  get currentMode() { return currentMode; }
+};
 
 const $time = document.getElementById('time');
 const $start = document.getElementById('start');
