@@ -28,6 +28,7 @@ const $longBreakForm = document.getElementById('longBreakForm');
 const $longBreakInput = document.getElementById('longBreakInput');
 const $longBreakList = document.getElementById('longBreakList');
 const $focusToggle = document.getElementById('focusToggle');
+const $finishTaskBtn = document.getElementById('finishTaskBtn');
 
 let focusMode = false;
 let timerVisible = true;
@@ -113,6 +114,17 @@ function showToast(message){
   toastHideTimer = setTimeout(()=>{ toast.classList.remove('show'); }, 2600);
 }
 
+function updateFinishButtonLabel(){
+  if(!$finishTaskBtn) return;
+  if(currentMode === 'pomodoro'){
+    $finishTaskBtn.textContent = 'Finished Task';
+    $finishTaskBtn.title = 'Finish Pomodoro Task';
+  } else {
+    $finishTaskBtn.textContent = 'Finished Break';
+    $finishTaskBtn.title = 'Finish Break Item';
+  }
+}
+
 function setMode(newMode, options = {}){
   const {reset = false, statusText = ''} = options;
   if(!timerState[newMode]) return;
@@ -130,6 +142,7 @@ function setMode(newMode, options = {}){
   $status.textContent = statusText || (currentMode.charAt(0).toUpperCase()+currentMode.slice(1) + ' (paused)');
   updateFormsVisibility();
   updateActiveTaskDisplay();
+  updateFinishButtonLabel();
   saveTimerState();
 }
 
@@ -139,8 +152,18 @@ function handlePomodoroCompletion(){
   setMode('short', {reset:true, statusText:'Short break (ready)'});
 }
 
-function finishPomodoroTask(){
-  if(currentMode !== 'pomodoro') return;
+function onBreakFinished(){
+  if(currentMode === 'short'){
+    const item = breaks.short.find(x=>x.id===activeShortBreakId);
+    if(item){ item.completed = (item.completed||0) + 1; saveBreaks(); renderBreaks(); }
+  } else if(currentMode === 'long'){
+    const item = breaks.long.find(x=>x.id===activeLongBreakId);
+    if(item){ item.completed = (item.completed||0) + 1; saveBreaks(); renderBreaks(); }
+  }
+  saveTimerState();
+}
+
+function finishCurrentItem(){
   if(isRunning){ clearInterval(timerId); isRunning=false; }
   remaining = 0;
   updateDisplay();
@@ -150,7 +173,15 @@ function finishPomodoroTask(){
   $pause.disabled = true;
   setRainVolume(0);
   disableRainAnimation();
-  handlePomodoroCompletion();
+  if(currentMode === 'pomodoro'){
+    handlePomodoroCompletion();
+    return;
+  }
+  if(currentMode === 'short' || currentMode === 'long'){
+    onBreakFinished();
+    $status.textContent = 'Break finished';
+    showToast('Break finished.');
+  }
 }
 
 // Pour button behavior
@@ -486,6 +517,7 @@ makeRain();
 disableRainAnimation();
 // ensure forms match the loaded mode on startup
 updateFormsVisibility();
+updateFinishButtonLabel();
 window.addEventListener('beforeunload', saveTimerState);
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',e=>{
@@ -575,8 +607,7 @@ if($infoToggle && $infoSection){ $infoToggle.addEventListener('click', ()=>{ con
 const $timerToggle = document.getElementById('timerToggle');
 if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; }); }
 
-const $finishTaskBtn = document.getElementById('finishTaskBtn');
-if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishPomodoroTask); }
+if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishCurrentItem); }
 
 const $buildVersion = document.getElementById('buildVersion');
 if($buildVersion){
