@@ -578,6 +578,7 @@ function renderTasks(){
     $taskList.appendChild(card);
   });
   updateActiveTaskDisplay();
+  renderPomoStatsPanel();
 }
 
 function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.push(t); saveTasks(); renderTasks(); }
@@ -792,6 +793,59 @@ function renderBreaks(){
     setupDragHandlers(card, 'longBreaks', index);
     $longBreakList.appendChild(card);
   });
+  renderPomoStatsPanel();
+}
+
+function showStatsSection(section){
+  const tasksSection = document.getElementById('tasksSection');
+  const pomosSection = document.getElementById('pomosSection');
+  const timeSection = document.getElementById('timeSection');
+  if(tasksSection) tasksSection.style.display = section === 'tasks' ? 'block' : 'none';
+  if(pomosSection) pomosSection.style.display = section === 'pomos' ? 'block' : 'none';
+  if(timeSection) timeSection.style.display = section === 'time' ? 'block' : 'none';
+}
+
+function renderPomoStatsPanel(){
+  const tasksCountEl = document.getElementById('tasksCount');
+  const tasksPanelList = document.getElementById('tasksPanelList');
+  const completedList = document.getElementById('completedList');
+  const totalPomoTimeEl = document.getElementById('totalPomoTime');
+  const timeBreakdownEl = document.getElementById('timeBreakdown');
+
+  const trackedTasks = tasks.filter(t => (t.completed || 0) > 0);
+  if(tasksCountEl) tasksCountEl.textContent = String(trackedTasks.length);
+  if(tasksPanelList){
+    tasksPanelList.innerHTML = '';
+    trackedTasks.forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = `${t.title}: ${t.completed || 0}/${t.target || 1}`;
+      tasksPanelList.appendChild(li);
+    });
+  }
+
+  const pomoEvents = sessionHistory.filter(e => e.type === 'pomodoro');
+  if(completedList){
+    completedList.innerHTML = '';
+    pomoEvents.forEach(e => {
+      const li = document.createElement('li');
+      li.textContent = `${e.title || 'Pomodoro'} • ${formatDuration(e.duration || 0)}`;
+      completedList.appendChild(li);
+    });
+  }
+
+  const totalPomodoroSeconds = pomoEvents.reduce((sum, e) => sum + (e.duration || 0), 0);
+  const totalBreakSeconds = sessionHistory
+    .filter(e => e.type === 'break')
+    .reduce((sum, e) => sum + (e.duration || 0), 0);
+
+  if(totalPomoTimeEl) totalPomoTimeEl.textContent = `${Math.floor(totalPomodoroSeconds / 60)}m`;
+  if(timeBreakdownEl){
+    timeBreakdownEl.innerHTML = `
+      <div>Pomodoro: ${formatDuration(totalPomodoroSeconds)}</div>
+      <div>Break: ${formatDuration(totalBreakSeconds)}</div>
+      <div>Total: ${formatDuration(totalPomodoroSeconds + totalBreakSeconds)}</div>
+    `;
+  }
 }
 
 // Budget persistence (pomodoro, short, long counts)
@@ -849,6 +903,55 @@ if($shortDec) $shortDec.addEventListener('click', ()=>{ budgets.short = Math.max
 if($shortInc) $shortInc.addEventListener('click', ()=>{ budgets.short++; saveBudgets(); renderBudgets(); });
 if($longDec) $longDec.addEventListener('click', ()=>{ budgets.long = Math.max(0, budgets.long-1); saveBudgets(); renderBudgets(); });
 if($longInc) $longInc.addEventListener('click', ()=>{ budgets.long++; saveBudgets(); renderBudgets(); });
+
+const $pomoStatsToggle = document.getElementById('pomoStatsToggle');
+const $pomoStatsPanel = document.getElementById('pomoStatsPanel');
+const $statsTasksBtn = document.getElementById('statsTasksBtn');
+const $statsPomosBtn = document.getElementById('statsPomosBtn');
+const $statsTimeBtn = document.getElementById('statsTimeBtn');
+const $resetTasksBtn = document.getElementById('resetTasksBtn');
+const $resetPomosBtn = document.getElementById('resetPomosBtn');
+const $resetTimeBtn = document.getElementById('resetTimeBtn');
+
+if($pomoStatsToggle && $pomoStatsPanel){
+  $pomoStatsToggle.addEventListener('click', ()=>{
+    const open = $pomoStatsPanel.style.display !== 'none';
+    $pomoStatsPanel.style.display = open ? 'none' : 'block';
+    if(!open){
+      renderPomoStatsPanel();
+      showStatsSection('tasks');
+    }
+  });
+}
+
+if($statsTasksBtn) $statsTasksBtn.addEventListener('click', ()=> showStatsSection('tasks'));
+if($statsPomosBtn) $statsPomosBtn.addEventListener('click', ()=> showStatsSection('pomos'));
+if($statsTimeBtn) $statsTimeBtn.addEventListener('click', ()=> showStatsSection('time'));
+
+if($resetTasksBtn){
+  $resetTasksBtn.addEventListener('click', ()=>{
+    tasks.forEach(t => { t.completed = 0; });
+    saveTasks();
+    renderTasks();
+    renderPomoStatsPanel();
+  });
+}
+
+if($resetPomosBtn){
+  $resetPomosBtn.addEventListener('click', ()=>{
+    sessionHistory = sessionHistory.filter(e => e.type !== 'pomodoro');
+    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(sessionHistory));
+    renderPomoStatsPanel();
+  });
+}
+
+if($resetTimeBtn){
+  $resetTimeBtn.addEventListener('click', ()=>{
+    sessionHistory = sessionHistory.filter(e => e.type !== 'pomodoro');
+    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(sessionHistory));
+    renderPomoStatsPanel();
+  });
+}
 
 // When a pomodoro finishes, attribute to active task if present
 function onPomodoroFinished(){
@@ -1013,6 +1116,7 @@ if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishCurrentItem);
 
 // Session history/summary
 loadSessionHistory();
+renderPomoStatsPanel();
 const $printSessionBtn = document.getElementById('printSessionBtn');
 const $sessionModal = document.getElementById('sessionModal');
 const $sessionSummaryContent = document.getElementById('sessionSummaryContent');
