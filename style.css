@@ -99,6 +99,7 @@ h1{margin:0;font-size:28px}
 .bubble{position:absolute;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,1),rgba(150,200,255,0.3));border-radius:50%;pointer-events:none;border:1.5px solid rgba(255,255,255,0.6);box-shadow:0 0 8px rgba(255,255,255,0.5), inset -1px -1px 3px rgba(0,0,0,0.2)}
 .status{color:var(--muted);margin-left:8px}
 footer{margin-top:18px;color:var(--muted);font-size:12px}
+.build-version{display:inline-block;opacity:0.8;letter-spacing:0.3px}
 
 /* water animations */
 @keyframes wave{0%,100%{transform:translateY(0px) scaleY(1)}33%{transform:translateY(-7.5px) scaleY(1.15)}66%{transform:translateY(2.5px) scaleY(0.95)}}

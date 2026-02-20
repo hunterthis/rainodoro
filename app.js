@@ -531,3 +531,12 @@ if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !t
 
 const $finishTaskBtn = document.getElementById('finishTaskBtn');
 if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishPomodoroTask); }
+
+const $buildVersion = document.getElementById('buildVersion');
+if($buildVersion){
+  const appScript = Array.from(document.scripts).find(script=>/app\.js(\?|$)/.test(script.getAttribute('src') || ''));
+  const src = appScript ? appScript.getAttribute('src') || '' : '';
+  let version = '';
+  try{ version = new URL(src, window.location.href).searchParams.get('v') || ''; }catch(e){}
+  $buildVersion.textContent = version ? `Build ${version}` : 'Build local';
+}
