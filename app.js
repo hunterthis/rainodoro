@@ -105,6 +105,7 @@ function getBreakDurationSeconds(){ return (breakPlusTen ? 15 : 5) * 60; }
 function updateBreakPlusTenButton(){
   if(!$breakPlusTenBtn) return;
   $breakPlusTenBtn.textContent = breakPlusTen ? '+10 Min Break: On' : '+10 Min Break: Off';
+  $breakPlusTenBtn.style.display = currentMode === 'short' ? 'block' : 'none';
 }
 function applyBreakDuration(adjustRemaining = true){
   const prevDuration = timerState.short.duration;
