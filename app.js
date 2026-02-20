@@ -36,6 +36,7 @@ const $longBreakForm = document.getElementById('longBreakForm');
 const $longBreakInput = document.getElementById('longBreakInput');
 const $longBreakList = document.getElementById('longBreakList');
 const $breakPlusTenBtn = document.getElementById('breakPlusTenBtn');
+const $breakPlusTenRow = document.getElementById('breakPlusTenRow');
 const $focusToggle = document.getElementById('focusToggle');
 const $finishTaskBtn = document.getElementById('finishTaskBtn');
 
@@ -218,7 +219,10 @@ function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duratio
 
 function updateBreakPlusTenButton(){
   if(!$breakPlusTenBtn) return;
-  $breakPlusTenBtn.style.display = currentMode === 'short' ? 'block' : 'none';
+  const showRow = currentMode === 'short';
+  if($breakPlusTenRow){
+    $breakPlusTenRow.classList.toggle('visible', showRow);
+  }
   if(breakPlusTenActivated){
     $breakPlusTenBtn.disabled = true;
     $breakPlusTenBtn.textContent = '+10 Min (Used)';

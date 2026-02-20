@@ -45,6 +45,9 @@ h1{margin:0;font-size:28px}
 .timer-compact .buttons button{padding:8px 10px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%}
 .timer-compact .buttons button:disabled{background:#0a1020;color:#4a5a6a;cursor:not-allowed;opacity:0.5}
 .timer-compact{min-width:120px}
+.break-plus-ten-row{max-height:0;opacity:0;overflow:hidden;transform:translateY(-4px);transition:max-height .22s ease,opacity .2s ease,transform .22s ease;margin-top:0}
+.break-plus-ten-row.visible{max-height:56px;opacity:1;transform:translateY(0);margin-top:6px}
+.break-plus-ten-row .timer-toggle-btn{margin-top:0}
 .settings label{display:flex;align-items:center;gap:8px}
 .settings input[type="range"]{width:120px}
 .pour-btn{display:inline-block}
