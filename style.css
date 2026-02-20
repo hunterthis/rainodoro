@@ -6,9 +6,9 @@
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021 0%,#0b1320 100%);color:#e6eef6;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
-.app{width:100%;max-width:1200px;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:20px;min-height:auto}
+.app{width:100%;max-width:1200px;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6);display:grid;grid-template-columns:1fr 320px;grid-template-rows:auto auto 1fr;grid-template-areas:"header header" "controls controls" "visual sidebar";gap:32px;align-items:start;min-height:auto}
 .app.focus-mode{width:100%;max-width:100%;padding:0;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
-header{display:flex;justify-content:space-between;align-items:center;position:relative;width:100%}
+header{grid-area:header;display:flex;justify-content:space-between;align-items:center;position:relative;width:100%}
 .app.focus-mode header{justify-content:center}
 h1{margin:0;font-size:28px}
 .app.focus-mode h1{display:none}
@@ -24,7 +24,7 @@ h1{margin:0;font-size:28px}
 .info-content p{margin:0 0 8px 0}
 .info-content p:last-child{margin-bottom:0}
 .tagline{margin:0;color:var(--muted)}
-.controls{display:flex;gap:20px;align-items:center;margin-top:0;width:100%}
+.controls{grid-area:controls;display:flex;gap:20px;align-items:center;margin-top:0;width:100%}
 .modes{display:flex;gap:8px}
 .mode{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
 .mode.active{background:var(--accent);color:#041024;border:none}
@@ -37,7 +37,7 @@ h1{margin:0;font-size:28px}
 .settings input[type="range"]{width:120px}
 .mute-btn{padding:6px 12px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s}
 .mute-btn:hover{background:#1f3d52}
-.visual{margin-top:0;display:flex;gap:40px;align-items:center;justify-content:center;width:100%}
+.visual{grid-area:visual;margin-top:0;display:flex;gap:40px;align-items:start;justify-content:center;width:100%}
 .sidepanel{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
  .timer-compact{background:transparent;padding:10px;border-radius:8px;min-width:140px;text-align:center}
 .timer-compact #time{font-size:28px;font-weight:600}
@@ -56,7 +56,7 @@ h1{margin:0;font-size:28px}
 .app.focus-mode .status{margin:0;font-size:14px}
 .app.focus-mode .pour-stats{display:none}
 .app.focus-mode .section form,.app.focus-mode .controls,.app.focus-mode .sidebar{display:none}
- .sidebar{position:fixed;left:28px;top:100px;width:300px;margin:0;padding:0;background:transparent;border-radius:8px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;gap:16px;max-height:calc(100vh - 140px);overflow-y:auto}
+ .sidebar{grid-area:sidebar;position:relative;width:100%;margin:0;padding:0 0 0 24px;border-left:1px solid rgba(78,168,222,0.1);background:transparent;display:flex;flex-direction:column;gap:16px;max-height:600px;overflow-y:auto}
 .section{margin-bottom:12px;flex-shrink:0}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .section-header h3{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#e6eef6}
@@ -147,7 +147,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 }
 
 @media(max-width:920px){
-  .app{display:flex;flex-direction:column;margin-left:0}
-  .sidebar{position:relative;left:0;top:0;width:100%;max-height:none;overflow:visible;padding:20px 0;border-top:1px solid rgba(78,168,222,0.1)}
+  .app{display:flex;flex-direction:column;margin-left:0;align-items:stretch}
+  .sidebar{position:relative;left:0;top:0;width:100%;max-height:none;overflow:visible;padding:20px 0;border-top:1px solid rgba(78,168,222,0.1);border-left:none}
   .visual{position:relative;z-index:1;flex-direction:column}
 }
