@@ -47,6 +47,11 @@ class GraphicsController {
     document.addEventListener('timer-stopped', this.onTimerStop);
     document.addEventListener('timer-paused', this.onTimerPause);
     
+    // Test: Add a direct listener to verify events are firing
+    document.addEventListener('timer-tick', (e) => {
+      console.log('[TEST] Direct timer-tick listener fired:', e.detail);
+    });
+    
     // Setup toggle
     this.setupToggle();
     
@@ -128,6 +133,8 @@ class GraphicsController {
   }
   
   onTimerTick(event) {
+    console.log('[GraphicsController] onTimerTick called!', event); // Add this first
+    
     const detail = event.detail;
     this.fillPercentage = detail.percentage;
     this.remaining = detail.remaining;
