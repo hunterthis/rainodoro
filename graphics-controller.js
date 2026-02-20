@@ -7,12 +7,14 @@ class GraphicsController {
     this.host = document.getElementById('immersive-host');
     this.animationFrameId = null;
     this.isRunning = false;
+    this.isActive = false;
     
     // Animation state
     this.fillPercentage = 0;
     this.remaining = 0;
     this.totalDuration = 0;
     this.mode = 'pomodoro';
+    this.previousMode = null;
     
     // Internal resolution for 8-bit look
     this.baseWidth = 320;
@@ -44,12 +46,14 @@ class GraphicsController {
     // Time tracking
     this.lastTickTime = Date.now();
     
-    // Event listener
+    // Event listeners
     this.onTimerTick = this.onTimerTick.bind(this);
+    this.onTimerFinish = this.onTimerFinish.bind(this);
     document.addEventListener('timer-tick', this.onTimerTick);
+    document.addEventListener('timer-finished', this.onTimerFinish);
     
-    // Setup fullscreen toggle
-    this.setupFullscreenToggle();
+    // Setup toggle
+    this.setupToggle();
     
     // Resize handler
     this.onWindowResize = this.onWindowResize.bind(this);
@@ -58,84 +62,64 @@ class GraphicsController {
     this.calculateScale();
   }
   
-  setupFullscreenToggle() {
+  setupToggle() {
     const toggleBtn = document.getElementById('fullscreenToggle');
     const exitBtn = document.getElementById('immersive-exit-btn');
     
     if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => this.toggleFullscreen());
+      toggleBtn.addEventListener('click', () => this.toggleAnimation());
     }
     
     if (exitBtn) {
-      exitBtn.addEventListener('click', () => this.exitFullscreen());
+      exitBtn.addEventListener('click', () => this.exitAnimation());
     }
     
     // ESC key to exit
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.fullscreenElement === this.host) {
-        this.exitFullscreen();
+      if (e.key === 'Escape' && this.isActive) {
+        this.exitAnimation();
       }
     });
   }
   
-  toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      this.enterFullscreen();
+  toggleAnimation() {
+    if (this.isActive) {
+      this.exitAnimation();
     } else {
-      this.exitFullscreen();
+      this.enterAnimation();
     }
   }
   
-  enterFullscreen() {
-    if (this.host.requestFullscreen) {
-      this.host.requestFullscreen().catch(err => {
-        console.error(`Failed to enter fullscreen: ${err.message}`);
-      });
-    }
+  enterAnimation() {
+    if (this.isActive) return;
+    this.isActive = true;
     this.host.classList.remove('immersive-hidden');
     this.calculateScale();
     this.startAnimation();
-    document.addEventListener('fullscreenchange', () => this.onFullscreenChange());
   }
   
-  exitFullscreen() {
-    if (document.fullscreenElement === this.host) {
-      document.exitFullscreen();
-    }
+  exitAnimation() {
+    if (!this.isActive) return;
+    this.isActive = false;
     this.host.classList.add('immersive-hidden');
     this.stopAnimation();
-  }
-  
-  onFullscreenChange() {
-    if (!document.fullscreenElement) {
-      this.stopAnimation();
-    }
   }
   
   calculateScale() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     
-    // Integer scaling to maintain 8-bit look
-    const scaleX = Math.floor(w / this.baseWidth);
-    const scaleY = Math.floor(h / this.baseHeight);
-    this.scale = Math.max(1, Math.min(scaleX, scaleY));
-    
-    // Set canvas size
-    const canvasW = this.baseWidth * this.scale;
-    const canvasH = this.baseHeight * this.scale;
-    
-    this.canvas.width = canvasW;
-    this.canvas.height = canvasH;
+    // Set canvas to fill viewport
+    this.canvas.width = w;
+    this.canvas.height = h;
     
     // Apply pixelated rendering
     this.ctx.imageSmoothingEnabled = false;
-    this.ctx.pixelated = true;
     this.canvas.style.imageRendering = 'pixelated';
   }
   
   onWindowResize() {
-    if (document.fullscreenElement === this.host) {
+    if (this.isActive) {
       this.calculateScale();
     }
   }
@@ -151,6 +135,13 @@ class GraphicsController {
     this.updateTimerOverlay();
   }
   
+  onTimerFinish() {
+    // Auto-exit animation when timer finishes
+    if (this.isActive) {
+      this.exitAnimation();
+    }
+  }
+  
   updateTimerOverlay() {
     const mins = Math.floor(this.remaining / 60);
     const secs = this.remaining % 60;
@@ -162,8 +153,8 @@ class GraphicsController {
     this.raindrops = [];
     for (let i = 0; i < this.maxRaindrops; i++) {
       this.raindrops.push({
-        x: Math.random() * this.baseWidth,
-        y: Math.random() * this.baseHeight,
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
         vx: (Math.random() - 0.5) * 0.3,
         vy: Math.random() * 1 + 0.5,
         length: Math.random() * 3 + 2,
@@ -178,8 +169,8 @@ class GraphicsController {
     this.particles = [];
     for (let i = 0; i < this.maxParticles; i++) {
       this.particles.push({
-        x: Math.random() * this.baseWidth,
-        y: Math.random() * this.baseHeight,
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
         vx: (Math.random() - 0.5) * 0.4,
         vy: (Math.random() - 0.5) * 0.4,
         size: Math.random() * 1.5 + 0.5,
@@ -192,18 +183,21 @@ class GraphicsController {
   }
   
   updateRaindrops(deltaTime) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    
     for (let drop of this.raindrops) {
       drop.y += drop.vy;
       drop.x += drop.vx;
       
       // Wrap around edges
-      if (drop.y > this.baseHeight) {
+      if (drop.y > h) {
         drop.y = -drop.length;
-        drop.x = Math.random() * this.baseWidth;
+        drop.x = Math.random() * w;
       }
       
-      if (drop.x < 0) drop.x = this.baseWidth;
-      if (drop.x > this.baseWidth) drop.x = 0;
+      if (drop.x < 0) drop.x = w;
+      if (drop.x > w) drop.x = 0;
       
       // Slight drift
       drop.vx += (Math.random() - 0.5) * 0.01;
@@ -212,9 +206,12 @@ class GraphicsController {
   }
   
   updateParticles(deltaTime) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    
     for (let p of this.particles) {
       // Gentle vortex-like movement
-      const angle = Math.atan2(this.baseHeight / 2 - p.y, this.baseWidth / 2 - p.x);
+      const angle = Math.atan2(h / 2 - p.y, w / 2 - p.x);
       const vortexStrength = 0.1;
       p.vx += Math.cos(angle) * vortexStrength * 0.01;
       p.vy += Math.sin(angle) * vortexStrength * 0.01;
@@ -228,10 +225,10 @@ class GraphicsController {
       p.y += p.vy;
       
       // Wrap edges
-      if (p.x < 0) p.x = this.baseWidth;
-      if (p.x > this.baseWidth) p.x = 0;
-      if (p.y < 0) p.y = this.baseHeight;
-      if (p.y > this.baseHeight) p.y = 0;
+      if (p.x < 0) p.x = w;
+      if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h;
+      if (p.y > h) p.y = 0;
       
       // Rotation
       p.angle += p.rotationSpeed;
@@ -239,16 +236,19 @@ class GraphicsController {
   }
   
   drawRainAnimation() {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    
     // Clear canvas
     this.ctx.fillStyle = this.palette.bg;
-    this.ctx.fillRect(0, 0, this.baseWidth, this.baseHeight);
+    this.ctx.fillRect(0, 0, w, h);
     
-    // Draw water level fill (soft gradient)
-    const fillHeight = (this.fillPercentage * this.baseHeight);
+    // Draw water level fill from bottom (fills browser viewport)
+    const fillHeight = (this.fillPercentage * h);
     
     // Dithered gradient effect
-    for (let y = this.baseHeight - fillHeight; y < this.baseHeight; y++) {
-      const gradientFactor = (this.baseHeight - y) / fillHeight;
+    for (let y = h - fillHeight; y < h; y++) {
+      const gradientFactor = (h - y) / fillHeight;
       
       // Soft dither pattern for 8-bit look
       if ((y + Math.floor(Date.now() / 100)) % 2 === 0) {
@@ -257,7 +257,7 @@ class GraphicsController {
         this.ctx.fillStyle = '#4d9eff';
       }
       
-      this.ctx.fillRect(0, y, this.baseWidth, 1);
+      this.ctx.fillRect(0, y, w, 1);
     }
     
     // Draw raindrops (falling down)
@@ -280,22 +280,25 @@ class GraphicsController {
   }
   
   drawParticleAnimation() {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    
     // Clear canvas
     this.ctx.fillStyle = this.palette.bg;
-    this.ctx.fillRect(0, 0, this.baseWidth, this.baseHeight);
+    this.ctx.fillRect(0, 0, w, h);
     
-    // Draw water level fill
-    const fillHeight = (this.fillPercentage * this.baseHeight);
+    // Draw water level fill from bottom
+    const fillHeight = (this.fillPercentage * h);
     
     // Soft dither pattern
-    for (let y = this.baseHeight - fillHeight; y < this.baseHeight; y++) {
+    for (let y = h - fillHeight; y < h; y++) {
       if ((y + Math.floor(Date.now() / 100)) % 2 === 0) {
         this.ctx.fillStyle = this.palette.water;
       } else {
         this.ctx.fillStyle = '#4d9eff';
       }
       
-      this.ctx.fillRect(0, y, this.baseWidth, 1);
+      this.ctx.fillRect(0, y, w, 1);
     }
     
     // Draw particles as small squares/motes
@@ -331,7 +334,7 @@ class GraphicsController {
       this.drawParticleAnimation();
     }
     
-    if (this.isRunning && document.fullscreenElement === this.host) {
+    if (this.isRunning && this.isActive) {
       this.animationFrameId = requestAnimationFrame(() => this.animate());
     }
   }
@@ -349,7 +352,7 @@ class GraphicsController {
     }
     this.isRunning = false;
     this.ctx.fillStyle = this.palette.bg;
-    this.ctx.fillRect(0, 0, this.baseWidth, this.baseHeight);
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
   
   setAnimationMode(mode) {
