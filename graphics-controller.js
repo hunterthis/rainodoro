@@ -33,6 +33,7 @@ class GraphicsController {
     // Time tracking
     this.lastTickTime = Date.now();
     this.lastLogTime = 0;
+    this.lastDrawLog = 0;
     
     // Event listeners
     this.onTimerTick = this.onTimerTick.bind(this);
@@ -260,6 +261,12 @@ class GraphicsController {
     // Draw water level fill from bottom (fills browser viewport)
     const fillHeight = (this.fillPercentage * h);
     
+    // Debug log when drawing
+    if (!this.lastDrawLog || Date.now() - this.lastDrawLog > 2000) {
+      console.log('[drawRainAnimation] Drawing water at', (this.fillPercentage * 100).toFixed(1) + '%', '=', Math.floor(fillHeight) + 'px of', h + 'px');
+      this.lastDrawLog = Date.now();
+    }
+    
     this.ctx.fillStyle = this.palette.water;
     this.ctx.fillRect(0, h - fillHeight, w, fillHeight);
     
@@ -350,6 +357,12 @@ class GraphicsController {
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
       this.mode = window.timerState.currentMode;
       this.timerIsRunning = window.timerState.isRunning;
+      
+      // Debug log every 2 seconds
+      if (!this.lastLogTime || now - this.lastLogTime > 2000) {
+        console.log('[animate] fillPercentage:', this.fillPercentage.toFixed(4), 'remaining:', this.remaining, 'duration:', this.totalDuration);
+        this.lastLogTime = now;
+      }
     }
     
     // Update animations only when timer is running
