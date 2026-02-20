@@ -8,6 +8,7 @@ class GraphicsController {
     this.animationFrameId = null;
     this.isRunning = false;
     this.isActive = false;
+    this.timerIsRunning = false;
     
     // Animation state
     this.fillPercentage = 0;
@@ -49,8 +50,14 @@ class GraphicsController {
     // Event listeners
     this.onTimerTick = this.onTimerTick.bind(this);
     this.onTimerFinish = this.onTimerFinish.bind(this);
+    this.onTimerStart = this.onTimerStart.bind(this);
+    this.onTimerStop = this.onTimerStop.bind(this);
+    this.onTimerPause = this.onTimerPause.bind(this);
     document.addEventListener('timer-tick', this.onTimerTick);
     document.addEventListener('timer-finished', this.onTimerFinish);
+    document.addEventListener('timer-started', this.onTimerStart);
+    document.addEventListener('timer-stopped', this.onTimerStop);
+    document.addEventListener('timer-paused', this.onTimerPause);
     
     // Setup toggle
     this.setupToggle();
@@ -137,6 +144,28 @@ class GraphicsController {
   
   onTimerFinish() {
     // Auto-exit animation when timer finishes
+    this.timerIsRunning = false;
+    if (this.isActive) {
+      this.exitAnimation();
+    }
+  }
+  
+  onTimerStart() {
+    this.timerIsRunning = true;
+    if (this.isActive) {
+      this.startAnimation();
+    }
+  }
+  
+  onTimerPause() {
+    this.timerIsRunning = false;
+    if (this.isActive) {
+      this.stopAnimation();
+    }
+  }
+  
+  onTimerStop() {
+    this.timerIsRunning = false;
     if (this.isActive) {
       this.exitAnimation();
     }
@@ -334,7 +363,7 @@ class GraphicsController {
       this.drawParticleAnimation();
     }
     
-    if (this.isRunning && this.isActive) {
+    if (this.isRunning && this.isActive && this.timerIsRunning) {
       this.animationFrameId = requestAnimationFrame(() => this.animate());
     }
   }
