@@ -49,7 +49,11 @@ class GraphicsController {
     
     // Test: Add a direct listener to verify events are firing
     document.addEventListener('timer-tick', (e) => {
-      console.log('[TEST] Direct timer-tick listener fired:', e.detail);
+      console.log('[TEST] Direct timer-tick listener fired:', {
+        percentage: e.detail.percentage,
+        remaining: e.detail.remaining,
+        total: e.detail.total
+      });
     });
     
     // Setup toggle
@@ -136,22 +140,24 @@ class GraphicsController {
     console.log('[GraphicsController] onTimerTick called!', event); // Add this first
     
     const detail = event.detail;
+    console.log('[GraphicsController] Event detail:', {
+      percentage: detail.percentage,
+      remaining: detail.remaining,
+      total: detail.total,
+      mode: detail.mode
+    });
+    
     this.fillPercentage = detail.percentage;
     this.remaining = detail.remaining;
     this.totalDuration = detail.total;
     this.mode = detail.mode;
 
-    // Debug logging
-    if (this.isActive) {
-      console.log('[GraphicsController] Timer tick:', {
-        fillPercentage: this.fillPercentage,
-        remaining: this.remaining,
-        total: this.totalDuration,
-        isActive: this.isActive,
-        isRunning: this.isRunning,
-        timerIsRunning: this.timerIsRunning
-      });
-    }
+    console.log('[GraphicsController] After assignment:', {
+      fillPercentage: this.fillPercentage,
+      remaining: this.remaining,
+      total: this.totalDuration,
+      isActive: this.isActive
+    });
 
     const pct = this.fillPercentage * 100;
     if (this.isActive && this.timerIsRunning) {
