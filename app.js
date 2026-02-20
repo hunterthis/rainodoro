@@ -54,7 +54,7 @@ const BREAK_PLUS_TEN_KEY = 'rainodoro_break_plus_ten_v1';
 // WebAudio rain noise
 let audioCtx, rainGain, rainSource;
 let masterVolume = 0.18;
-let breakPlusTen = false;
+let breakPlusTenActivated = false;
 function initAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -101,31 +101,27 @@ function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; timerI
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
 function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
 
-function getBreakDurationSeconds(){ return (breakPlusTen ? 15 : 5) * 60; }
 function updateBreakPlusTenButton(){
   if(!$breakPlusTenBtn) return;
-  $breakPlusTenBtn.textContent = breakPlusTen ? '+10 Min Break: On' : '+10 Min Break: Off';
   $breakPlusTenBtn.style.display = currentMode === 'short' ? 'block' : 'none';
-}
-function applyBreakDuration(adjustRemaining = true){
-  const prevDuration = timerState.short.duration;
-  const nextDuration = getBreakDurationSeconds();
-  timerState.short.duration = nextDuration;
-  updateBreakPlusTenButton();
-  if(currentMode !== 'short') return;
-  duration = nextDuration;
-  if(adjustRemaining){
-    const elapsed = Math.max(0, prevDuration - remaining);
-    remaining = Math.max(0, nextDuration - elapsed);
+  if(breakPlusTenActivated){
+    $breakPlusTenBtn.disabled = true;
+    $breakPlusTenBtn.textContent = '+10 Min (Used)';
+  } else {
+    $breakPlusTenBtn.disabled = false;
+    $breakPlusTenBtn.textContent = '+10 Min Break';
   }
+}
+function addTenMinutesToBreak(){
+  if(currentMode !== 'short' || breakPlusTenActivated) return;
+  remaining += 10 * 60;
+  duration += 10 * 60;
+  timerState.short.duration = duration;
+  timerState.short.remaining = remaining;
+  breakPlusTenActivated = true;
+  updateBreakPlusTenButton();
   updateDisplay();
   saveTimerState();
-}
-function loadBreakPlusTenPreference(){
-  try{ breakPlusTen = localStorage.getItem(BREAK_PLUS_TEN_KEY) === '1'; }
-  catch(e){ breakPlusTen = false; }
-  updateBreakPlusTenButton();
-  applyBreakDuration(false);
 }
 
 function showToast(message){
@@ -188,6 +184,7 @@ function setMode(newMode, options = {}){
   updateDisplay();
   $status.textContent = statusText || (currentMode.charAt(0).toUpperCase()+currentMode.slice(1) + ' (paused)');
   updateFormsVisibility();
+  breakPlusTenActivated = false;
   updateBreakPlusTenButton();
   updateActiveTaskDisplay();
   updateFinishButtonLabel();
@@ -576,7 +573,7 @@ function tick(){
 }
 
 // initial load
-loadBreakPlusTenPreference();
+updateBreakPlusTenButton();
 loadTimerState();
 duration = timerState[currentMode].duration;
 remaining = timerState[currentMode].remaining;
@@ -600,9 +597,7 @@ window.addEventListener('beforeunload', saveTimerState);
 
 if($breakPlusTenBtn){
   $breakPlusTenBtn.addEventListener('click', ()=>{
-    breakPlusTen = !breakPlusTen;
-    try{ localStorage.setItem(BREAK_PLUS_TEN_KEY, breakPlusTen ? '1' : '0'); }catch(e){}
-    applyBreakDuration(true);
+    addTenMinutesToBreak();
   });
 }
 
