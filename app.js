@@ -198,7 +198,15 @@ function dispatchTimerTick(){
   document.dispatchEvent(tickEvent);
 }
 
-function tick(){ if(remaining<=0){ document.dispatchEvent(new Event('timer-finished')); stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } remaining--; window.timerState = { remaining, duration, currentMode, isRunning }; updateDisplay(); saveTimerState(); dispatchTimerTick(); }
+function tick(){ 
+  console.log('[app.js] tick() called, remaining:', remaining); 
+  if(remaining<=0){ document.dispatchEvent(new Event('timer-finished')); stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } 
+  remaining--; 
+  window.timerState = { remaining, duration, currentMode, isRunning }; 
+  updateDisplay(); 
+  saveTimerState(); 
+  dispatchTimerTick(); 
+}
 
 function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; window.timerState = { remaining, duration, currentMode, isRunning }; timerId = setInterval(tick,1000); $start.disabled=true; $pause.disabled=false; $status.textContent='Running'; enableRainAnimation(); document.dispatchEvent(new Event('timer-started')); dispatchTimerTick(); }
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; window.timerState = { remaining, duration, currentMode, isRunning }; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); document.dispatchEvent(new Event('timer-paused')); dispatchTimerTick(); }
