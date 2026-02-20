@@ -32,10 +32,10 @@ h1{margin:0;font-size:28px}
 #time{font-size:48px;font-weight:600}
 .buttons{display:flex;gap:8px;justify-content:center;margin-top:8px}
 .buttons button{padding:8px 12px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer}
-.settings{display:flex;flex-direction:column;gap:6px;color:var(--muted);align-items:flex-start}
-.settings label{display:flex;align-items:center;gap:8px}
+.settings{display:inline-flex;flex-direction:row;gap:8px;color:var(--muted);align-items:center;flex-wrap:nowrap;white-space:nowrap}
+.settings label{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin:0}
 .settings input[type="range"]{width:120px}
-.mute-btn{padding:6px 12px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s}
+.mute-btn{padding:6px 12px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s;margin-top:0;align-self:center}
 .mute-btn:hover{background:#1f3d52}
 .visual{grid-area:visual;margin-top:0;display:flex;gap:40px;align-items:start;justify-content:center;width:100%}
 .sidepanel{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
@@ -141,6 +141,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
   .app{display:flex;flex-direction:column;padding:16px;gap:16px;align-items:stretch}
   header{width:100%}
   .controls{flex-direction:column;align-items:stretch;gap:12px}
+  .settings{display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center}
   .visual{flex-direction:column;align-items:center;gap:20px}
   .sidebar{width:100%;max-height:none;padding:20px 0;border-top:1px solid rgba(78,168,222,0.1);border-left:none;padding-left:0;margin:0}
   .bucket-wrap{width:200px;height:260px}
