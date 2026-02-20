@@ -122,5 +122,6 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 
 @media(max-width:920px){
   .app{display:block}
-  .sidebar{width:auto;margin-bottom:12px}
+  .sidebar{float:none;clear:both;position:relative;z-index:2;width:auto;margin-bottom:12px}
+  .visual{position:relative;z-index:1}
 }

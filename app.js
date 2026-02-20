@@ -188,14 +188,29 @@ function setupSortable(){
   if(!hasSortable()) return;
   Sortable.create($taskList, {
     animation: 150,
+    delayOnTouchOnly: true,
+    delay: 150,
+    touchStartThreshold: 6,
+    filter: 'button, input, textarea, select, option',
+    preventOnFilter: false,
     onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('tasks', $taskList); }
   });
   Sortable.create($shortBreakList, {
     animation: 150,
+    delayOnTouchOnly: true,
+    delay: 150,
+    touchStartThreshold: 6,
+    filter: 'button, input, textarea, select, option',
+    preventOnFilter: false,
     onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('shortBreaks', $shortBreakList); }
   });
   Sortable.create($longBreakList, {
     animation: 150,
+    delayOnTouchOnly: true,
+    delay: 150,
+    touchStartThreshold: 6,
+    filter: 'button, input, textarea, select, option',
+    preventOnFilter: false,
     onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('longBreaks', $longBreakList); }
   });
 }
