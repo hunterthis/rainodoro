@@ -225,8 +225,8 @@ function finishCurrentItem(){
   }
   if(currentMode === 'short' || currentMode === 'long'){
     onBreakFinished();
-    $status.textContent = 'Break finished';
-    showToast('Break finished.');
+    showToast('Break finished — returning to pomodoro mode.');
+    setMode('pomodoro', {reset:true, statusText:'Pomodoro (ready)'});
   }
 }
 
