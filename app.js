@@ -188,6 +188,7 @@ function setMode(newMode, options = {}){
   updateDisplay();
   $status.textContent = statusText || (currentMode.charAt(0).toUpperCase()+currentMode.slice(1) + ' (paused)');
   updateFormsVisibility();
+  updateBreakPlusTenButton();
   updateActiveTaskDisplay();
   updateFinishButtonLabel();
   updateFinishButtonState();
