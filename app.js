@@ -186,7 +186,6 @@ function updateDisplay(){
 
 function dispatchTimerTick(){
   const pct = Math.max(0, (duration - remaining) / duration);
-  console.log('[app.js] Dispatching timer-tick:', { remaining, duration, percentage: pct });
   const tickEvent = new CustomEvent('timer-tick', {
     detail: {
       remaining: remaining,
@@ -199,7 +198,6 @@ function dispatchTimerTick(){
 }
 
 function tick(){ 
-  console.log('[app.js] tick() called, remaining:', remaining); 
   if(remaining<=0){ document.dispatchEvent(new Event('timer-finished')); stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } 
   remaining--; 
   window.timerState = { remaining, duration, currentMode, isRunning }; 

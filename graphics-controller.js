@@ -47,15 +47,6 @@ class GraphicsController {
     document.addEventListener('timer-stopped', this.onTimerStop);
     document.addEventListener('timer-paused', this.onTimerPause);
     
-    // Test: Add a direct listener to verify events are firing
-    document.addEventListener('timer-tick', (e) => {
-      console.log('[TEST] Direct timer-tick listener fired:', {
-        percentage: e.detail.percentage,
-        remaining: e.detail.remaining,
-        total: e.detail.total
-      });
-    });
-    
     // Setup toggle
     this.setupToggle();
     
@@ -137,28 +128,11 @@ class GraphicsController {
   }
   
   onTimerTick(event) {
-    const timestamp = Date.now();
-    console.log(`[GraphicsController @ ${timestamp}] onTimerTick called!`);
-    
     const detail = event.detail;
-    console.log(`[GraphicsController @ ${timestamp}] Event detail:`, {
-      percentage: detail.percentage,
-      remaining: detail.remaining,
-      total: detail.total,
-      mode: detail.mode
-    });
-    
     this.fillPercentage = detail.percentage;
     this.remaining = detail.remaining;
     this.totalDuration = detail.total;
     this.mode = detail.mode;
-
-    console.log(`[GraphicsController @ ${timestamp}] After assignment:`, {
-      fillPercentage: this.fillPercentage,
-      remaining: this.remaining,
-      total: this.totalDuration,
-      isActive: this.isActive
-    });
 
     const pct = this.fillPercentage * 100;
     if (this.isActive && this.timerIsRunning) {
@@ -286,21 +260,6 @@ class GraphicsController {
     // Draw water level fill from bottom (fills browser viewport)
     const fillHeight = (this.fillPercentage * h);
     
-    // Debug logging (throttled to once per 2 seconds)
-    if (!this.lastLogTime || Date.now() - this.lastLogTime > 2000) {
-      const timestamp = Date.now();
-      console.log(`[GraphicsController @ ${timestamp}] Drawing water:`, {
-        fillPercentage: this.fillPercentage,
-        fillPercentagePercent: (this.fillPercentage * 100).toFixed(2) + '%',
-        fillHeight: fillHeight,
-        fillHeightPixels: Math.floor(fillHeight) + 'px',
-        canvasHeight: h,
-        isActive: this.isActive,
-        calculation: `${this.fillPercentage} * ${h} = ${fillHeight}`
-      });
-      this.lastLogTime = Date.now();
-    }
-    
     this.ctx.fillStyle = this.palette.water;
     this.ctx.fillRect(0, h - fillHeight, w, fillHeight);
     
@@ -383,8 +342,13 @@ class GraphicsController {
     const deltaTime = (now - this.lastTickTime) / 1000;
     this.lastTickTime = now;
     
-    // Sync running state from window (water level syncs from timer-tick event)
+    // Sync water level from window.timerState EVERY FRAME for smooth updates
     if (window.timerState) {
+      this.remaining = window.timerState.remaining;
+      this.totalDuration = window.timerState.duration;
+      // Calculate percentage: (elapsed / total) where elapsed = duration - remaining
+      this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
+      this.mode = window.timerState.currentMode;
       this.timerIsRunning = window.timerState.isRunning;
     }
     
