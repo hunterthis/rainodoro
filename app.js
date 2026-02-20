@@ -200,7 +200,8 @@ function dispatchTimerTick(){
 function tick(){ 
   if(remaining<=0){ document.dispatchEvent(new Event('timer-finished')); stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } 
   remaining--; 
-  window.timerState = { remaining, duration, currentMode, isRunning }; 
+  window.timerState = { remaining, duration, currentMode, isRunning };
+  console.log('[tick] Updated window.timerState:', window.timerState);
   updateDisplay(); 
   saveTimerState(); 
   dispatchTimerTick(); 
