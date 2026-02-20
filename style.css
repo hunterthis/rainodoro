@@ -100,6 +100,8 @@ h1{margin:0;font-size:28px}
 .status{color:var(--muted);margin-left:8px}
 footer{margin-top:18px;color:var(--muted);font-size:12px}
 .build-version{display:inline-block;opacity:0.8;letter-spacing:0.3px}
+.toast-alert{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(10px);padding:10px 12px;border-radius:8px;background:rgba(15,23,36,0.96);border:1px solid rgba(78,168,222,0.25);color:#e6eef6;font-size:12px;opacity:0;pointer-events:none;transition:opacity 0.2s ease, transform 0.2s ease;z-index:9999;max-width:min(92vw,420px);text-align:center}
+.toast-alert.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* water animations */
 @keyframes wave{0%,100%{transform:translateY(0px) scaleY(1)}33%{transform:translateY(-7.5px) scaleY(1.15)}66%{transform:translateY(2.5px) scaleY(0.95)}}

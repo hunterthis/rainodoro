@@ -31,6 +31,7 @@ const $focusToggle = document.getElementById('focusToggle');
 
 let focusMode = false;
 let timerVisible = true;
+let toastHideTimer = null;
 
 // data
 let tasks = [];
@@ -96,6 +97,48 @@ function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; timerI
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
 function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
 
+function showToast(message){
+  let toast = document.getElementById('toastAlert');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.id = 'toastAlert';
+    toast.className = 'toast-alert';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(()=>{ toast.classList.remove('show'); }, 2600);
+}
+
+function setMode(newMode, options = {}){
+  const {reset = false, statusText = ''} = options;
+  if(!timerState[newMode]) return;
+  if(isRunning) pauseTimer();
+  if(newMode !== currentMode) saveTimerState();
+  currentMode = newMode;
+  if(reset){ timerState[currentMode].remaining = timerState[currentMode].duration; }
+  const state = timerState[currentMode];
+  duration = state.duration;
+  remaining = state.remaining;
+  document.querySelectorAll('.mode').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode === currentMode);
+  });
+  updateDisplay();
+  $status.textContent = statusText || (currentMode.charAt(0).toUpperCase()+currentMode.slice(1) + ' (paused)');
+  updateFormsVisibility();
+  updateActiveTaskDisplay();
+  saveTimerState();
+}
+
+function handlePomodoroCompletion(){
+  onPomodoroFinished();
+  showToast('Pomodoro finished — now it\'s time for a short break.');
+  setMode('short', {reset:true, statusText:'Short break (ready)'});
+}
+
 function finishPomodoroTask(){
   if(currentMode !== 'pomodoro') return;
   if(isRunning){ clearInterval(timerId); isRunning=false; }
@@ -105,11 +148,9 @@ function finishPomodoroTask(){
   if(pourBtn) pourBtn.disabled = false;
   $start.disabled = false;
   $pause.disabled = true;
-  $status.textContent = 'Finished';
   setRainVolume(0);
   disableRainAnimation();
-  onPomodoroFinished();
-  saveTimerState();
+  handlePomodoroCompletion();
 }
 
 // Pour button behavior
@@ -406,7 +447,26 @@ document.getElementById('longInc').addEventListener('click', ()=>{ budgets.long+
 function onPomodoroFinished(){ if(activeTaskId){ const t = tasks.find(x=>x.id===activeTaskId); if(t){ t.completed = (t.completed||0) + 1; saveTasks(); renderTasks(); } } saveTimerState(); }
 
 // update tick to call onPomodoroFinished when finishing a pomodoro
-function tick(){ if(remaining<=0){ clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; $status.textContent='Finished'; setRainVolume(0); if(currentMode==='pomodoro'){ onPomodoroFinished(); } return; } remaining--; updateDisplay(); saveTimerState(); }
+function tick(){
+  if(remaining<=0){
+    clearInterval(timerId);
+    isRunning=false;
+    $start.disabled=false;
+    $pause.disabled=true;
+    setRainVolume(0);
+    disableRainAnimation();
+    if(currentMode==='pomodoro'){
+      handlePomodoroCompletion();
+    } else {
+      $status.textContent='Finished';
+      saveTimerState();
+    }
+    return;
+  }
+  remaining--;
+  updateDisplay();
+  saveTimerState();
+}
 
 // initial load
 loadTimerState();
@@ -429,23 +489,9 @@ updateFormsVisibility();
 window.addEventListener('beforeunload', saveTimerState);
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',e=>{
-  document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
-  e.target.classList.add('active');
   const newMode = e.target.dataset.mode;
-  // if same mode, do nothing
-  if(newMode === currentMode) { return; }
-  // save current mode state before switching
-  saveTimerState();
-  // switch mode
-  if(isRunning) pauseTimer();
-  currentMode = newMode;
-  const state = timerState[currentMode];
-  duration = state.duration;
-  remaining = state.remaining;
-  updateDisplay();
-  $status.textContent = currentMode.charAt(0).toUpperCase()+currentMode.slice(1) + ' (paused)';
-  // update which add-forms are visible for the selected mode
-  updateFormsVisibility();
+  if(newMode === currentMode) return;
+  setMode(newMode);
 }));
 
 $start.addEventListener('click', ()=> startTimer());
