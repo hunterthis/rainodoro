@@ -26,8 +26,8 @@ h1{margin:0;font-size:28px}
 .tagline{margin:0;color:var(--muted)}
 .controls{grid-area:controls;display:flex;gap:20px;align-items:center;margin-top:0;width:100%}
 .modes{display:flex;gap:8px}
-.mode{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
-.mode.active{background:var(--accent);color:#041024;border:none}
+.mode{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;min-width:110px}
+.mode.active{background:var(--accent);color:#041024;border:1px solid rgba(255,255,255,0.06)}
 .timer{flex:1;text-align:center}
 #time{font-size:48px;font-weight:600}
 .buttons{display:flex;gap:8px;justify-content:center;margin-top:8px}
