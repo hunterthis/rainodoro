@@ -1,5 +1,5 @@
 // Rainodoro - simple Pomodoro with bucket fill and rain sound
-const modes = {pomodoro:25*60, short:5*60, long:15*60};
+const modes = {pomodoro:25*60, short:5*60};
 let currentMode = 'pomodoro';
 let timerState = {
   pomodoro: {duration:25*60, remaining:25*60},
@@ -27,6 +27,7 @@ const $shortBreakList = document.getElementById('shortBreakList');
 const $longBreakForm = document.getElementById('longBreakForm');
 const $longBreakInput = document.getElementById('longBreakInput');
 const $longBreakList = document.getElementById('longBreakList');
+const $breakPlusTen = document.getElementById('breakPlusTen');
 const $focusToggle = document.getElementById('focusToggle');
 const $finishTaskBtn = document.getElementById('finishTaskBtn');
 
@@ -48,10 +49,12 @@ const BREAKS_KEY = 'rainodoro_breaks_v1';
 const BUDGETS_KEY = 'rainodoro_budgets_v1';
 const POURS_KEY = 'rainodoro_pours_v1';
 const TIMER_STATE_KEY = 'rainodoro_timer_v1';
+const BREAK_PLUS_TEN_KEY = 'rainodoro_break_plus_ten_v1';
 
 // WebAudio rain noise
 let audioCtx, rainGain, rainSource;
 let masterVolume = 0.18;
+let breakPlusTen = false;
 function initAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -97,6 +100,27 @@ function tick(){ if(remaining<=0){ stopTimer(); $status.textContent='Finished'; 
 function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; timerId = setInterval(tick,1000); $start.disabled=true; $pause.disabled=false; $status.textContent='Running'; enableRainAnimation(); }
 function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
 function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
+
+function getBreakDurationSeconds(){ return (breakPlusTen ? 15 : 5) * 60; }
+function applyBreakDuration(adjustRemaining = true){
+  const prevDuration = timerState.short.duration;
+  const nextDuration = getBreakDurationSeconds();
+  timerState.short.duration = nextDuration;
+  if(currentMode !== 'short') return;
+  duration = nextDuration;
+  if(adjustRemaining){
+    if(remaining === prevDuration) remaining = nextDuration;
+    else remaining = Math.min(remaining, nextDuration);
+  }
+  updateDisplay();
+  saveTimerState();
+}
+function loadBreakPlusTenPreference(){
+  try{ breakPlusTen = localStorage.getItem(BREAK_PLUS_TEN_KEY) === '1'; }
+  catch(e){ breakPlusTen = false; }
+  if($breakPlusTen) $breakPlusTen.checked = breakPlusTen;
+  applyBreakDuration(false);
+}
 
 function showToast(message){
   let toast = document.getElementById('toastAlert');
@@ -244,6 +268,7 @@ function loadTimerState(){
     if(raw){ 
       const saved = JSON.parse(raw);
       if(saved && saved.currentMode && timerState[saved.currentMode]) currentMode = saved.currentMode;
+      if(currentMode === 'long') currentMode = 'short';
       if(saved && saved.states){
         Object.keys(saved.states).forEach(mode=>{
           if(timerState[mode] && typeof saved.states[mode].remaining === 'number'){
@@ -280,33 +305,39 @@ function reorderFromDom(listType, listEl){
 function setupSortable(){
   if(isTouchDevice()) return;
   if(!hasSortable()) return;
-  Sortable.create($taskList, {
-    animation: 150,
-    delayOnTouchOnly: true,
-    delay: 150,
-    touchStartThreshold: 6,
-    filter: 'button, input, textarea, select, option',
-    preventOnFilter: false,
-    onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('tasks', $taskList); }
-  });
-  Sortable.create($shortBreakList, {
-    animation: 150,
-    delayOnTouchOnly: true,
-    delay: 150,
-    touchStartThreshold: 6,
-    filter: 'button, input, textarea, select, option',
-    preventOnFilter: false,
-    onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('shortBreaks', $shortBreakList); }
-  });
-  Sortable.create($longBreakList, {
-    animation: 150,
-    delayOnTouchOnly: true,
-    delay: 150,
-    touchStartThreshold: 6,
-    filter: 'button, input, textarea, select, option',
-    preventOnFilter: false,
-    onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('longBreaks', $longBreakList); }
-  });
+  if($taskList){
+    Sortable.create($taskList, {
+      animation: 150,
+      delayOnTouchOnly: true,
+      delay: 150,
+      touchStartThreshold: 6,
+      filter: 'button, input, textarea, select, option',
+      preventOnFilter: false,
+      onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('tasks', $taskList); }
+    });
+  }
+  if($shortBreakList){
+    Sortable.create($shortBreakList, {
+      animation: 150,
+      delayOnTouchOnly: true,
+      delay: 150,
+      touchStartThreshold: 6,
+      filter: 'button, input, textarea, select, option',
+      preventOnFilter: false,
+      onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('shortBreaks', $shortBreakList); }
+    });
+  }
+  if($longBreakList){
+    Sortable.create($longBreakList, {
+      animation: 150,
+      delayOnTouchOnly: true,
+      delay: 150,
+      touchStartThreshold: 6,
+      filter: 'button, input, textarea, select, option',
+      preventOnFilter: false,
+      onEnd: (evt)=>{ if(evt.oldIndex == null || evt.newIndex == null) return; reorderFromDom('longBreaks', $longBreakList); }
+    });
+  }
 }
 function getDragData(event){
   try{ return JSON.parse(event.dataTransfer.getData('text/plain')); }
@@ -417,7 +448,16 @@ function updateActiveTaskDisplay(){
 
 function loadBreaks(){ try{ const raw=localStorage.getItem(BREAKS_KEY); breaks = raw ? JSON.parse(raw) : {short:[], long:[]}; }catch(e){ breaks={short:[], long:[]} } renderBreaks(); }
 function saveBreaks(){ localStorage.setItem(BREAKS_KEY, JSON.stringify(breaks)); }
-function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setupListDropZone($longBreakList, 'longBreaks'); $shortBreakList.innerHTML=''; $longBreakList.innerHTML=''; breaks.short.forEach((it, index)=>{ const li=document.createElement('li');
+function renderBreaks(){
+  if($shortBreakList){
+    setupListDropZone($shortBreakList, 'shortBreaks');
+    $shortBreakList.innerHTML='';
+  }
+  if($longBreakList){
+    setupListDropZone($longBreakList, 'longBreaks');
+    $longBreakList.innerHTML='';
+  }
+  breaks.short.forEach((it, index)=>{ const li=document.createElement('li');
   li.dataset.id=it.id;
   const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
   const title=document.createElement('div'); title.textContent=it.text;
@@ -436,7 +476,8 @@ function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setu
   actions.appendChild(selectBtn); actions.appendChild(del);
   li.appendChild(left); li.appendChild(actions);
   setupDragHandlers(li, 'shortBreaks', index);
-  $shortBreakList.appendChild(li); });
+  if($shortBreakList) $shortBreakList.appendChild(li); });
+  if(!$longBreakList) return;
   breaks.long.forEach((it, index)=>{ const li=document.createElement('li');
   li.dataset.id=it.id;
   const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
@@ -462,9 +503,12 @@ function renderBreaks(){ setupListDropZone($shortBreakList, 'shortBreaks'); setu
 function loadBudgets(){ try{ const raw=localStorage.getItem(BUDGETS_KEY); budgets = raw ? JSON.parse(raw) : {pomodoro:0,short:0,long:0}; }catch(e){ budgets={pomodoro:0,short:0,long:0}; } renderBudgets(); }
 function saveBudgets(){ localStorage.setItem(BUDGETS_KEY, JSON.stringify(budgets)); }
 function renderBudgets(){ 
-  document.getElementById('pomoCount').textContent = budgets.pomodoro;
-  document.getElementById('shortCount').textContent = budgets.short;
-  document.getElementById('longCount').textContent = budgets.long;
+  const $pomoCount = document.getElementById('pomoCount');
+  const $shortCount = document.getElementById('shortCount');
+  const $longCount = document.getElementById('longCount');
+  if($pomoCount) $pomoCount.textContent = budgets.pomodoro;
+  if($shortCount) $shortCount.textContent = budgets.short;
+  if($longCount) $longCount.textContent = budgets.long;
 }
 
 // Pour tracking
@@ -482,16 +526,22 @@ function resetBreakPours(){ pourCounts.break = 0; savePours(); renderPours(); }
 
 // Hook up forms
 $taskForm.addEventListener('submit', (e)=>{ e.preventDefault(); const t=$taskTitle.value.trim(); if(!t) return; addTask(t); $taskTitle.value=''; });
-$shortBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$shortBreakInput.value.trim(); if(!v) return; breaks.short.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $shortBreakInput.value=''; });
-$longBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$longBreakInput.value.trim(); if(!v) return; breaks.long.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $longBreakInput.value=''; });
+if($shortBreakForm && $shortBreakInput){ $shortBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$shortBreakInput.value.trim(); if(!v) return; breaks.short.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $shortBreakInput.value=''; }); }
+if($longBreakForm && $longBreakInput){ $longBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$longBreakInput.value.trim(); if(!v) return; breaks.long.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $longBreakInput.value=''; }); }
 
 // Hook up budget controls
-document.getElementById('pomoDec').addEventListener('click', ()=>{ budgets.pomodoro = Math.max(0, budgets.pomodoro-1); saveBudgets(); renderBudgets(); });
-document.getElementById('pomoInc').addEventListener('click', ()=>{ budgets.pomodoro++; saveBudgets(); renderBudgets(); });
-document.getElementById('shortDec').addEventListener('click', ()=>{ budgets.short = Math.max(0, budgets.short-1); saveBudgets(); renderBudgets(); });
-document.getElementById('shortInc').addEventListener('click', ()=>{ budgets.short++; saveBudgets(); renderBudgets(); });
-document.getElementById('longDec').addEventListener('click', ()=>{ budgets.long = Math.max(0, budgets.long-1); saveBudgets(); renderBudgets(); });
-document.getElementById('longInc').addEventListener('click', ()=>{ budgets.long++; saveBudgets(); renderBudgets(); });
+const $pomoDec = document.getElementById('pomoDec');
+const $pomoInc = document.getElementById('pomoInc');
+const $shortDec = document.getElementById('shortDec');
+const $shortInc = document.getElementById('shortInc');
+const $longDec = document.getElementById('longDec');
+const $longInc = document.getElementById('longInc');
+if($pomoDec) $pomoDec.addEventListener('click', ()=>{ budgets.pomodoro = Math.max(0, budgets.pomodoro-1); saveBudgets(); renderBudgets(); });
+if($pomoInc) $pomoInc.addEventListener('click', ()=>{ budgets.pomodoro++; saveBudgets(); renderBudgets(); });
+if($shortDec) $shortDec.addEventListener('click', ()=>{ budgets.short = Math.max(0, budgets.short-1); saveBudgets(); renderBudgets(); });
+if($shortInc) $shortInc.addEventListener('click', ()=>{ budgets.short++; saveBudgets(); renderBudgets(); });
+if($longDec) $longDec.addEventListener('click', ()=>{ budgets.long = Math.max(0, budgets.long-1); saveBudgets(); renderBudgets(); });
+if($longInc) $longInc.addEventListener('click', ()=>{ budgets.long++; saveBudgets(); renderBudgets(); });
 
 // When a pomodoro finishes, attribute to active task if present
 function onPomodoroFinished(){ if(activeTaskId){ const t = tasks.find(x=>x.id===activeTaskId); if(t){ t.completed = (t.completed||0) + 1; saveTasks(); renderTasks(); } } saveTimerState(); }
@@ -519,6 +569,7 @@ function tick(){
 }
 
 // initial load
+loadBreakPlusTenPreference();
 loadTimerState();
 duration = timerState[currentMode].duration;
 remaining = timerState[currentMode].remaining;
@@ -539,6 +590,14 @@ updateFormsVisibility();
 updateFinishButtonLabel();
 updateFinishButtonState();
 window.addEventListener('beforeunload', saveTimerState);
+
+if($breakPlusTen){
+  $breakPlusTen.addEventListener('change', ()=>{
+    breakPlusTen = $breakPlusTen.checked;
+    try{ localStorage.setItem(BREAK_PLUS_TEN_KEY, breakPlusTen ? '1' : '0'); }catch(e){}
+    applyBreakDuration(true);
+  });
+}
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',e=>{
   const newMode = e.target.dataset.mode;
@@ -590,7 +649,7 @@ function updateFormsVisibility(){
     if(currentMode === 'pomodoro'){
       $taskForm.style.display = 'flex';
       $shortBreakForm.style.display = 'none';
-      $longBreakForm.style.display = 'none';
+      if($longBreakForm) $longBreakForm.style.display = 'none';
       // hide sidebar sections not relevant
       const sShort = document.getElementById('sidebarShortBreaks'); if(sShort) sShort.style.display = 'none';
       const sLong = document.getElementById('sidebarLongBreaks'); if(sLong) sLong.style.display = 'none';
@@ -599,7 +658,7 @@ function updateFormsVisibility(){
     else if(currentMode === 'short'){
       $taskForm.style.display = 'none';
       $shortBreakForm.style.display = 'flex';
-      $longBreakForm.style.display = 'none';
+      if($longBreakForm) $longBreakForm.style.display = 'none';
       const sShort = document.getElementById('sidebarShortBreaks'); if(sShort) sShort.style.display = 'block';
       const sLong = document.getElementById('sidebarLongBreaks'); if(sLong) sLong.style.display = 'none';
       const sTasks = document.getElementById('sidebarTasks'); if(sTasks) sTasks.style.display = 'none';
@@ -607,7 +666,7 @@ function updateFormsVisibility(){
     else if(currentMode === 'long'){
       $taskForm.style.display = 'none';
       $shortBreakForm.style.display = 'none';
-      $longBreakForm.style.display = 'flex';
+      if($longBreakForm) $longBreakForm.style.display = 'flex';
       const sShort = document.getElementById('sidebarShortBreaks'); if(sShort) sShort.style.display = 'none';
       const sLong = document.getElementById('sidebarLongBreaks'); if(sLong) sLong.style.display = 'block';
       const sTasks = document.getElementById('sidebarTasks'); if(sTasks) sTasks.style.display = 'none';

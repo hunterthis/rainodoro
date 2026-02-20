@@ -19,13 +19,13 @@
     <section class="controls">
       <div class="modes">
         <button data-mode="pomodoro" class="mode active">Pomodoro</button>
-        <button data-mode="short" class="mode">Short Break</button>
-        <button data-mode="long" class="mode">Long Break</button>
+        <button data-mode="short" class="mode">Break</button>
       </div>
 
       <div class="settings">
         <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
         <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
+        <label><input id="breakPlusTen" type="checkbox"> +10 min break</label>
       </div>
     </section>
 
@@ -48,28 +48,15 @@
 
       <div id="sidebarShortBreaks" class="section">
         <div class="section-header">
-          <h3>Short Break Items</h3>
+          <h3>Break Items</h3>
           <div class="section-controls">
             <button id="shortDec" class="count-btn">−</button>
             <span id="shortCount" class="count-display">0</span>
             <button id="shortInc" class="count-btn">+</button>
           </div>
         </div>
-        <form id="shortBreakForm"><input id="shortBreakInput" placeholder="Add short-break item" /><button type="submit">Add</button></form>
+        <form id="shortBreakForm"><input id="shortBreakInput" placeholder="Add break item" /><button type="submit">Add</button></form>
         <ul id="shortBreakList" class="break-list"></ul>
-      </div>
-
-      <div id="sidebarLongBreaks" class="section">
-        <div class="section-header">
-          <h3>Long Break Items</h3>
-          <div class="section-controls">
-            <button id="longDec" class="count-btn">−</button>
-            <span id="longCount" class="count-display">0</span>
-            <button id="longInc" class="count-btn">+</button>
-          </div>
-        </div>
-        <form id="longBreakForm"><input id="longBreakInput" placeholder="Add long-break item" /><button type="submit">Add</button></form>
-        <ul id="longBreakList" class="break-list"></ul>
       </div>
     </aside>
 
@@ -150,6 +137,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <script src="app.js?v=20260220e"></script>
+  <script src="app.js?v=20260220f"></script>
 </body>
 </html>
