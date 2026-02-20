@@ -156,7 +156,22 @@ function playPourSound(){ if(!audioCtx) initAudio(); const ctx = audioCtx; const
 
 function formatTime(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${ss.toString().padStart(2,'0')}` }
 let previousWaterHeight = 0;
-function updateDisplay(){ $time.textContent = formatTime(remaining); const pct = 100*(1 - remaining/duration); $water.style.height = pct + '%';
+function updateDisplay(){ 
+  $time.textContent = formatTime(remaining);
+  
+  // Update immersive timer overlay to match main timer
+  const immersiveTimer = document.getElementById('immersive-timer-overlay');
+  if(immersiveTimer) {
+    if(window.timerVisible !== false) {
+      immersiveTimer.style.display = 'block';
+      immersiveTimer.textContent = formatTime(remaining);
+    } else {
+      immersiveTimer.style.display = 'none';
+    }
+  }
+  
+  const pct = 100*(1 - remaining/duration); 
+  $water.style.height = pct + '%';
   // create ripple when water level changes
   if(isRunning && Math.abs(pct - previousWaterHeight) > 0.2){ createRipple(); }
   // create bubbles as water fills (much more frequently for visibility)
@@ -888,7 +903,7 @@ if($infoToggle && $infoSection){ $infoToggle.addEventListener('click', ()=>{ con
 
 // timer visibility toggle (available on both pages)
 const $timerToggle = document.getElementById('timerToggle');
-if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; window.timerVisible = timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; if(window.graphicsController) window.graphicsController.refreshTimerVisibility(); }); }
+if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; window.timerVisible = timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; updateDisplay(); }); }
 
 if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishCurrentItem); }
 

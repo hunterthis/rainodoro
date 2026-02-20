@@ -99,8 +99,6 @@ class GraphicsController {
       this.timerIsRunning = window.timerState.isRunning;
     }
     
-    // Update overlay with current state
-    this.updateTimerOverlay();
     this.startAnimation();
   }
   
@@ -134,8 +132,6 @@ class GraphicsController {
     this.remaining = detail.remaining;
     this.totalDuration = detail.total;
     this.mode = detail.mode;
-
-    this.updateTimerOverlay();
 
     const pct = this.fillPercentage * 100;
     if (this.isActive && this.timerIsRunning) {
@@ -174,28 +170,6 @@ class GraphicsController {
     }
   }
 
-  updateTimerOverlay() {
-    if (!this.timerOverlay) return;
-    
-    // Respect the global timer visibility toggle
-    const isVisible = window.timerVisible !== false;
-    
-    if (isVisible && this.remaining !== undefined) {
-      this.timerOverlay.style.display = 'block';
-      const mins = Math.floor(this.remaining / 60);
-      const secs = this.remaining % 60;
-      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-      this.timerOverlay.textContent = timeStr;
-    } else {
-      this.timerOverlay.style.display = 'none';
-    }
-  }
-  
-  // Method to force update from external toggle
-  refreshTimerVisibility() {
-    this.updateTimerOverlay();
-  }
-  
   initRaindrops() {
     this.raindrops = [];
     for (let i = 0; i < this.maxRaindrops; i++) {
@@ -374,20 +348,6 @@ class GraphicsController {
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
       this.mode = window.timerState.currentMode;
       this.timerIsRunning = window.timerState.isRunning;
-    }
-    
-    // Update the timer display every frame
-    if (this.timerOverlay && this.remaining !== undefined) {
-      const isVisible = window.timerVisible !== false;
-      if (isVisible) {
-        this.timerOverlay.style.display = 'block';
-        const mins = Math.floor(this.remaining / 60);
-        const secs = this.remaining % 60;
-        const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-        this.timerOverlay.textContent = timeStr;
-      } else {
-        this.timerOverlay.style.display = 'none';
-      }
     }
     
     // Update animations only when timer is running
