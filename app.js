@@ -171,6 +171,9 @@ function loadTimerState(){
 function loadTasks(){ try{ const raw = localStorage.getItem(TASKS_KEY); tasks = raw ? JSON.parse(raw) : []; activeTaskId = tasks.find(t=>t.isActive)?.id || null; }catch(e){ tasks=[] } renderTasks(); }
 function saveTasks(){ localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
 function hasSortable(){ return typeof Sortable !== 'undefined'; }
+function isTouchDevice(){
+  return window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+}
 function reorderFromDom(listType, listEl){
   const list = getListByType(listType);
   if(!list) return;
@@ -185,6 +188,7 @@ function reorderFromDom(listType, listEl){
   updateActiveTaskDisplay();
 }
 function setupSortable(){
+  if(isTouchDevice()) return;
   if(!hasSortable()) return;
   Sortable.create($taskList, {
     animation: 150,
