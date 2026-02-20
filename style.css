@@ -63,19 +63,18 @@ h1{margin:0;font-size:28px}
 .section-controls{display:flex;align-items:center;gap:6px}
 .count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
 .count-display{font-size:12px;color:var(--muted);min-width:20px;text-align:center}
-.task-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:300px;overflow-y:auto;flex-wrap:wrap}
- .task-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
- .task-list li.draggable-item{cursor:grab}
- .task-list li.draggable-item:active{cursor:grabbing}
- .task-list li.dragging{opacity:0.5;border-color:rgba(78,168,222,0.4);background:rgba(78,168,222,0.06)}
- .task-meta{font-size:12px;color:var(--muted);margin-left:8px;display:flex;align-items:center;gap:8px}
- .task-actions button{margin-left:6px;padding:6px 8px;border-radius:6px;border:none;background:#153547;color:#eaf6ff}
+.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:12px;max-height:400px;overflow-y:auto;padding:4px}
+.task-card{padding:12px;border-radius:8px;border:2px solid rgba(78,168,222,0.2);background:rgba(78,168,222,0.05);cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:80px;user-select:none}
+.task-card:hover{border-color:rgba(78,168,222,0.4);background:rgba(78,168,222,0.1)}
+.task-card.selected{border-color:var(--accent);background:rgba(78,168,222,0.2);box-shadow:0 0 10px rgba(78,168,222,0.3)}
+.task-card-title{font-size:12px;font-weight:500;color:#e6eef6;word-break:break-word;margin-bottom:4px}
+.task-card-stat{font-size:10px;color:var(--muted)}
  .target-controls{display:inline-flex;align-items:center;gap:8px}
  .target-controls button{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer}
  .target-controls span{font-size:12px;color:var(--muted)}
 .breaks{margin-top:8px}
 .break-section{margin-bottom:10px}
-.break-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:300px;overflow-y:auto;flex-wrap:wrap}
+.break-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:300px;overflow-y:auto}
  .break-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
  .break-list li.draggable-item{cursor:grab}
  .break-list li.draggable-item:active{cursor:grabbing}

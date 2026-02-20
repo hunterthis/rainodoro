@@ -38,11 +38,12 @@
             <button id="pomoInc" class="count-btn">+</button>
           </div>
         </div>
-        <form id="taskForm">
-          <input id="taskTitle" placeholder="New task title" required />
-          <button type="submit">Add</button>
+        <form id="taskForm" style="display:flex;gap:6px;margin-bottom:10px">
+          <input id="taskTitle" placeholder="New task title" required style="flex:1" />
+          <button type="submit" class="timer-toggle-btn">Add</button>
+          <button id="deleteTaskBtn" type="button" class="timer-toggle-btn" style="background:#e74c3c;display:none">Delete</button>
         </form>
-        <ul id="taskList" class="task-list"></ul>
+        <div id="taskList" class="task-grid"></div>
       </div>
 
       <div id="sidebarShortBreaks" class="section">
@@ -155,6 +156,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <script src="app.js?v=20260220n"></script>
+  <script src="app.js?v=20260220o"></script>
 </body>
 </html>

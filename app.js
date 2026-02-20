@@ -482,32 +482,52 @@ function setupDragHandlers(li, listType, index){
   });
   li.querySelectorAll('button').forEach(btn=>{ btn.draggable = false; });
 }
-function renderTasks(){ setupListDropZone($taskList, 'tasks'); $taskList.innerHTML=''; tasks.forEach((t, index)=>{
-  const li=document.createElement('li');
-  li.dataset.id=t.id;
-  const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
-  const title=document.createElement('div'); title.textContent=t.title;
-  const meta=document.createElement('div'); meta.className='task-meta';
-  // target controls (decrease / display / increase)
-  const targetWrap = document.createElement('div'); targetWrap.className = 'target-controls';
-  const minus = document.createElement('button'); minus.textContent = '−'; minus.title = 'Decrease target'; minus.addEventListener('click', ()=>{ changeTarget(t.id, -1); });
-  const targetSpan = document.createElement('span'); targetSpan.textContent = `${t.completed || 0}/${t.target || 1}`;
-  const plus = document.createElement('button'); plus.textContent = '+'; plus.title = 'Increase target'; plus.addEventListener('click', ()=>{ changeTarget(t.id, 1); });
-  targetWrap.appendChild(minus); targetWrap.appendChild(targetSpan); targetWrap.appendChild(plus);
-  meta.appendChild(targetWrap);
-  left.appendChild(title); left.appendChild(meta);
-  const actions=document.createElement('div'); actions.className='task-actions';
-  const selectBtn=document.createElement('button'); selectBtn.textContent = (t.id===activeTaskId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ selectTask(t.id); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ deleteTask(t.id); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions);
-  setupDragHandlers(li, 'tasks', index);
-  $taskList.appendChild(li);
-}); updateActiveTaskDisplay(); }
+function renderTasks(){
+  $taskList.innerHTML='';
+  tasks.forEach((t)=>{
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.id = t.id;
+    if(t.id === activeTaskId) card.classList.add('selected');
+    
+    const title = document.createElement('div');
+    title.className = 'task-card-title';
+    title.textContent = t.title;
+    
+    const stat = document.createElement('div');
+    stat.className = 'task-card-stat';
+    stat.textContent = `${t.completed || 0}/${t.target || 1}`;
+    
+    card.appendChild(title);
+    card.appendChild(stat);
+    
+    card.addEventListener('click', ()=>{ selectTask(t.id); });
+    $taskList.appendChild(card);
+  });
+  updateActiveTaskDisplay();
+  updateDeleteButton();
+}
 
 function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.push(t); saveTasks(); renderTasks(); }
-function deleteTask(id){ tasks = tasks.filter(t=>t.id!==id); if(activeTaskId===id) activeTaskId=null; saveTasks(); renderTasks(); }
+function deleteTask(id){
+  const t = tasks.find(x=>x.id===id);
+  if(!t) return;
+  const confirmed = confirm(`Delete task "${t.title}"? It will be removed, but the completed count will be preserved.`);
+  if(!confirmed) return;
+  tasks = tasks.filter(x=>x.id!==id);
+  if(activeTaskId===id) activeTaskId=null;
+  saveTasks();
+  renderTasks();
+}
+function updateDeleteButton(){
+  const $deleteBtn = document.getElementById('deleteTaskBtn');
+  if(!$deleteBtn) return;
+  if(activeTaskId){
+    $deleteBtn.style.display = 'block';
+  } else {
+    $deleteBtn.style.display = 'none';
+  }
+}
 function changeTarget(id, delta){ const t = tasks.find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
 function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short' ? breaks.short : breaks.long; const item = breaks_arr.find(x=>x.id===id); if(!item) return; item.target = Math.max(1, (item.target||1) + delta); saveBreaks(); renderBreaks(); }
 function selectTask(id){ activeTaskId = id; saveTasks(); renderTasks(); updateActiveTaskDisplay(); }
@@ -610,7 +630,22 @@ function resetPomoPours(){ pourCounts.pomodoro = 0; savePours(); renderPours(); 
 function resetBreakPours(){ pourCounts.break = 0; savePours(); renderPours(); }
 
 // Hook up forms
-$taskForm.addEventListener('submit', (e)=>{ e.preventDefault(); const t=$taskTitle.value.trim(); if(!t) return; addTask(t); $taskTitle.value=''; });
+$taskForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  if(activeTaskId) return;
+  const t=$taskTitle.value.trim();
+  if(!t) return;
+  addTask(t);
+  $taskTitle.value='';
+});
+
+const $deleteTaskBtn = document.getElementById('deleteTaskBtn');
+if($deleteTaskBtn){
+  $deleteTaskBtn.addEventListener('click', ()=>{
+    if(activeTaskId){ deleteTask(activeTaskId); }
+  });
+}
+
 if($shortBreakForm && $shortBreakInput){ $shortBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$shortBreakInput.value.trim(); if(!v) return; breaks.short.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $shortBreakInput.value=''; }); }
 if($longBreakForm && $longBreakInput){ $longBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$longBreakInput.value.trim(); if(!v) return; breaks.long.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $longBreakInput.value=''; }); }
 
@@ -636,6 +671,10 @@ function onPomodoroFinished(){
       t.completed = (t.completed||0) + 1;
       const actualDuration = timerState.pomodoro.duration;
       recordSessionEvent('pomodoro', t.title, actualDuration, null);
+      saveTasks();
+      // Auto-delete the task after completion
+      tasks = tasks.filter(x=>x.id!==activeTaskId);
+      activeTaskId = null;
       saveTasks();
       renderTasks();
     }
