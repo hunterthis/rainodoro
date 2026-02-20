@@ -179,13 +179,15 @@ class GraphicsController {
     
     // Respect the global timer visibility toggle
     const isVisible = window.timerVisible !== false;
-    this.timerOverlay.style.display = isVisible ? 'block' : 'none';
     
     if (isVisible && this.remaining !== undefined) {
+      this.timerOverlay.style.display = 'block';
       const mins = Math.floor(this.remaining / 60);
       const secs = this.remaining % 60;
       const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
       this.timerOverlay.textContent = timeStr;
+    } else {
+      this.timerOverlay.style.display = 'none';
     }
   }
   
@@ -365,16 +367,27 @@ class GraphicsController {
     const deltaTime = (now - this.lastTickTime) / 1000;
     this.lastTickTime = now;
     
-    // Sync with current timer state from window every frame
+    // Sync with current timer state from window every frame for animation
     if (window.timerState) {
       this.remaining = window.timerState.remaining;
       this.totalDuration = window.timerState.duration;
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
       this.mode = window.timerState.currentMode;
       this.timerIsRunning = window.timerState.isRunning;
-      
-      // Update the timer overlay display
-      this.updateTimerOverlay();
+    }
+    
+    // Update the timer display every frame
+    if (this.timerOverlay && this.remaining !== undefined) {
+      const isVisible = window.timerVisible !== false;
+      if (isVisible) {
+        this.timerOverlay.style.display = 'block';
+        const mins = Math.floor(this.remaining / 60);
+        const secs = this.remaining % 60;
+        const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+        this.timerOverlay.textContent = timeStr;
+      } else {
+        this.timerOverlay.style.display = 'none';
+      }
     }
     
     // Update animations only when timer is running
