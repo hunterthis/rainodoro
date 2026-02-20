@@ -164,10 +164,17 @@ class GraphicsController {
 
   updateTimerOverlay() {
     if (!this.timerOverlay) return;
-    const mins = Math.floor(this.remaining / 60);
-    const secs = this.remaining % 60;
-    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-    this.timerOverlay.textContent = timeStr;
+    
+    // Respect the global timer visibility toggle
+    const isVisible = window.timerVisible !== false;
+    this.timerOverlay.style.display = isVisible ? 'block' : 'none';
+    
+    if (isVisible) {
+      const mins = Math.floor(this.remaining / 60);
+      const secs = this.remaining % 60;
+      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      this.timerOverlay.textContent = timeStr;
+    }
   }
   
   initRaindrops() {
