@@ -5,8 +5,8 @@
   --muted:#9aa4b2;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021 0%,#0b1320 100%);color:#e6eef6;display:flex;min-height:100vh;align-items:center;justify-content:center}
-.app{width:920px;max-width:95%;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021 0%,#0b1320 100%);color:#e6eef6;display:flex;min-height:100vh;align-items:flex-start;justify-content:center}
+.app{width:920px;max-width:95%;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6);display:flex;gap:20px;min-height:100vh;align-items:flex-start}
 .app.focus-mode{width:100%;max-width:100%;padding:0;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
 header{display:flex;justify-content:space-between;align-items:center;position:relative}
 .app.focus-mode header{justify-content:center}
@@ -56,14 +56,14 @@ h1{margin:0;font-size:28px}
 .app.focus-mode .status{margin:0;font-size:14px}
 .app.focus-mode .pour-stats{display:none}
 .app.focus-mode .section form,.app.focus-mode .controls,.app.focus-mode .sidebar{display:none}
- .sidebar{float:right;width:300px;margin-left:18px;padding:0;background:transparent;border-radius:8px}
+ .sidebar{width:300px;margin:0;padding:0;background:transparent;border-radius:8px;flex-shrink:0;max-height:calc(100vh - 56px);overflow-y:auto;display:flex;flex-direction:column}
 .section{margin-bottom:16px}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .section-header h3{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#e6eef6}
 .section-controls{display:flex;align-items:center;gap:6px}
 .count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
 .count-display{font-size:12px;color:var(--muted);min-width:20px;text-align:center}
-.task-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:220px;overflow:auto}
+.task-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:none;overflow:visible;flex:1}
  .task-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
  .task-list li.draggable-item{cursor:grab}
  .task-list li.draggable-item:active{cursor:grabbing}
@@ -75,7 +75,7 @@ h1{margin:0;font-size:28px}
  .target-controls span{font-size:12px;color:var(--muted)}
 .breaks{margin-top:8px}
 .break-section{margin-bottom:10px}
-.break-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:220px;overflow:auto}
+.break-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:none;overflow:visible;flex:1}
  .break-list li{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid rgba(78,168,222,0.06);background:transparent;margin-bottom:6px}
  .break-list li.draggable-item{cursor:grab}
  .break-list li.draggable-item:active{cursor:grabbing}
@@ -124,7 +124,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px}
 }
 
 @media(max-width:920px){
-  .app{display:block}
-  .sidebar{float:none;clear:both;position:relative;z-index:2;width:auto;margin-bottom:12px}
+  .app{display:flex;flex-direction:column}
+  .sidebar{width:100%;max-height:none;overflow:visible}
   .visual{position:relative;z-index:1}
 }
