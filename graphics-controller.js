@@ -350,19 +350,27 @@ class GraphicsController {
     this.lastTickTime = now;
     
     // Sync water level from window.timerState EVERY FRAME for smooth updates
-    if (window.timerState) {
-      this.remaining = window.timerState.remaining;
-      this.totalDuration = window.timerState.duration;
+    const timerState = window.timerState;
+    if (timerState && timerState.remaining !== undefined && timerState.duration !== undefined) {
+      this.remaining = timerState.remaining;
+      this.totalDuration = timerState.duration;
       // Calculate percentage: (elapsed / total) where elapsed = duration - remaining
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
-      this.mode = window.timerState.currentMode;
-      this.timerIsRunning = window.timerState.isRunning;
+      this.mode = timerState.currentMode;
+      this.timerIsRunning = timerState.isRunning;
       
-      // Debug log every 2 seconds
-      if (!this.lastLogTime || now - this.lastLogTime > 2000) {
-        console.log('[animate] fillPercentage:', this.fillPercentage.toFixed(4), 'remaining:', this.remaining, 'duration:', this.totalDuration);
+      // Debug log every 1 second to see updates
+      if (!this.lastLogTime || now - this.lastLogTime > 1000) {
+        console.log('[animate] READ timerState:', {
+          remaining: timerState.remaining,
+          duration: timerState.duration,
+          fillPct: (this.fillPercentage * 100).toFixed(1) + '%',
+          isRunning: timerState.isRunning
+        });
         this.lastLogTime = now;
       }
+    } else {
+      console.warn('[animate] window.timerState is invalid:', window.timerState);
     }
     
     // Update animations only when timer is running
