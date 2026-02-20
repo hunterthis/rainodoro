@@ -32,6 +32,7 @@ class GraphicsController {
     
     // Time tracking
     this.lastTickTime = Date.now();
+    this.lastLogTime = 0;
     
     // Event listeners
     this.onTimerTick = this.onTimerTick.bind(this);
@@ -132,6 +133,18 @@ class GraphicsController {
     this.remaining = detail.remaining;
     this.totalDuration = detail.total;
     this.mode = detail.mode;
+
+    // Debug logging
+    if (this.isActive) {
+      console.log('[GraphicsController] Timer tick:', {
+        fillPercentage: this.fillPercentage,
+        remaining: this.remaining,
+        total: this.totalDuration,
+        isActive: this.isActive,
+        isRunning: this.isRunning,
+        timerIsRunning: this.timerIsRunning
+      });
+    }
 
     const pct = this.fillPercentage * 100;
     if (this.isActive && this.timerIsRunning) {
@@ -258,6 +271,17 @@ class GraphicsController {
     
     // Draw water level fill from bottom (fills browser viewport)
     const fillHeight = (this.fillPercentage * h);
+    
+    // Debug logging (throttled to once per second)
+    if (!this.lastLogTime || Date.now() - this.lastLogTime > 1000) {
+      console.log('[GraphicsController] Drawing water:', {
+        fillPercentage: this.fillPercentage,
+        fillHeight: fillHeight,
+        canvasHeight: h,
+        isActive: this.isActive
+      });
+      this.lastLogTime = Date.now();
+    }
     
     this.ctx.fillStyle = this.palette.water;
     this.ctx.fillRect(0, h - fillHeight, w, fillHeight);
