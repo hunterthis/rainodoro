@@ -289,9 +289,12 @@ class GraphicsController {
     if (!this.lastLogTime || Date.now() - this.lastLogTime > 1000) {
       console.log('[GraphicsController] Drawing water:', {
         fillPercentage: this.fillPercentage,
+        fillPercentagePercent: (this.fillPercentage * 100).toFixed(2) + '%',
         fillHeight: fillHeight,
+        fillHeightPixels: Math.floor(fillHeight) + 'px',
         canvasHeight: h,
-        isActive: this.isActive
+        isActive: this.isActive,
+        calculation: `${this.fillPercentage} * ${h} = ${fillHeight}`
       });
       this.lastLogTime = Date.now();
     }
