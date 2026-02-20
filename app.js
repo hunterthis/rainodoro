@@ -27,7 +27,7 @@ const $shortBreakList = document.getElementById('shortBreakList');
 const $longBreakForm = document.getElementById('longBreakForm');
 const $longBreakInput = document.getElementById('longBreakInput');
 const $longBreakList = document.getElementById('longBreakList');
-const $breakPlusTen = document.getElementById('breakPlusTen');
+const $breakPlusTenBtn = document.getElementById('breakPlusTenBtn');
 const $focusToggle = document.getElementById('focusToggle');
 const $finishTaskBtn = document.getElementById('finishTaskBtn');
 
@@ -102,15 +102,20 @@ function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=
 function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
 
 function getBreakDurationSeconds(){ return (breakPlusTen ? 15 : 5) * 60; }
+function updateBreakPlusTenButton(){
+  if(!$breakPlusTenBtn) return;
+  $breakPlusTenBtn.textContent = breakPlusTen ? '+10 Min Break: On' : '+10 Min Break: Off';
+}
 function applyBreakDuration(adjustRemaining = true){
   const prevDuration = timerState.short.duration;
   const nextDuration = getBreakDurationSeconds();
   timerState.short.duration = nextDuration;
+  updateBreakPlusTenButton();
   if(currentMode !== 'short') return;
   duration = nextDuration;
   if(adjustRemaining){
-    if(remaining === prevDuration) remaining = nextDuration;
-    else remaining = Math.min(remaining, nextDuration);
+    const elapsed = Math.max(0, prevDuration - remaining);
+    remaining = Math.max(0, nextDuration - elapsed);
   }
   updateDisplay();
   saveTimerState();
@@ -118,7 +123,7 @@ function applyBreakDuration(adjustRemaining = true){
 function loadBreakPlusTenPreference(){
   try{ breakPlusTen = localStorage.getItem(BREAK_PLUS_TEN_KEY) === '1'; }
   catch(e){ breakPlusTen = false; }
-  if($breakPlusTen) $breakPlusTen.checked = breakPlusTen;
+  updateBreakPlusTenButton();
   applyBreakDuration(false);
 }
 
@@ -591,9 +596,9 @@ updateFinishButtonLabel();
 updateFinishButtonState();
 window.addEventListener('beforeunload', saveTimerState);
 
-if($breakPlusTen){
-  $breakPlusTen.addEventListener('change', ()=>{
-    breakPlusTen = $breakPlusTen.checked;
+if($breakPlusTenBtn){
+  $breakPlusTenBtn.addEventListener('click', ()=>{
+    breakPlusTen = !breakPlusTen;
     try{ localStorage.setItem(BREAK_PLUS_TEN_KEY, breakPlusTen ? '1' : '0'); }catch(e){}
     applyBreakDuration(true);
   });
