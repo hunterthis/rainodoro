@@ -32,8 +32,6 @@ class GraphicsController {
     
     // Time tracking
     this.lastTickTime = Date.now();
-    this.lastLogTime = 0;
-    this.lastDrawLog = 0;
     
     // Event listeners
     this.onTimerTick = this.onTimerTick.bind(this);
@@ -92,13 +90,13 @@ class GraphicsController {
     this.host.classList.remove('immersive-hidden');
     this.calculateScale();
     
-    // Sync current timer state from window.timerState
-    if (window.timerState) {
-      this.remaining = window.timerState.remaining;
-      this.totalDuration = window.timerState.duration;
+    // Sync current timer state from live timer getters
+    if (window.pomodoroTimer) {
+      this.remaining = window.pomodoroTimer.remaining;
+      this.totalDuration = window.pomodoroTimer.duration;
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
-      this.mode = window.timerState.currentMode;
-      this.timerIsRunning = window.timerState.isRunning;
+      this.mode = window.pomodoroTimer.currentMode;
+      this.timerIsRunning = window.pomodoroTimer.isRunning;
     }
     
     this.startAnimation();
@@ -261,12 +259,6 @@ class GraphicsController {
     // Draw water level fill from bottom (fills browser viewport)
     const fillHeight = (this.fillPercentage * h);
     
-    // Debug log when drawing
-    if (!this.lastDrawLog || Date.now() - this.lastDrawLog > 2000) {
-      console.log('[drawRainAnimation] Drawing water at', (this.fillPercentage * 100).toFixed(1) + '%', '=', Math.floor(fillHeight) + 'px of', h + 'px');
-      this.lastDrawLog = Date.now();
-    }
-    
     this.ctx.fillStyle = this.palette.water;
     this.ctx.fillRect(0, h - fillHeight, w, fillHeight);
     
@@ -358,18 +350,6 @@ class GraphicsController {
       // Calculate percentage: (elapsed / total) where elapsed = duration - remaining
       this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
       
-      // Debug log every 1 second to see updates
-      if (!this.lastLogTime || now - this.lastLogTime > 1000) {
-        console.log('[animate] LIVE READ:', {
-          remaining: this.remaining,
-          duration: this.totalDuration,
-          fillPct: (this.fillPercentage * 100).toFixed(1) + '%',
-          isRunning: this.timerIsRunning
-        });
-        this.lastLogTime = now;
-      }
-    } else {
-      console.warn('[animate] window.pomodoroTimer not available');
     }
     
     // Update animations only when timer is running

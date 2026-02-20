@@ -41,6 +41,7 @@ const $finishTaskBtn = document.getElementById('finishTaskBtn');
 
 let focusMode = false;
 let timerVisible = true;
+let cardEditMode = false;
 window.timerVisible = timerVisible;
 let toastHideTimer = null;
 
@@ -152,9 +153,9 @@ function initAudio(){
 function setRainVolume(scale){ if(!rainGain || !audioCtx) return; const v = (scale||0) * masterVolume; rainGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); }
 
 // Water animation effects - particles placed in rain-overlay to avoid water overflow clipping
-function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found'); return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 24 + 12; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); console.log('Ripple created at', size + 'px'); setTimeout(() => ripple.remove(), 800); }
+function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 24 + 12; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); setTimeout(() => ripple.remove(), 800); }
 
-function createBubble(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found for bubble'); return; } const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 4 + 2.5; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '8%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; overlay.appendChild(bubble); console.log('Bubble created at', size + 'px'); setTimeout(() => bubble.remove(), 2000); }
+function createBubble(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { return; } const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 4 + 2.5; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '8%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; overlay.appendChild(bubble); setTimeout(() => bubble.remove(), 2000); }
 
 // Pour sound using WebAudio
 function playPourSound(){ if(!audioCtx) initAudio(); const ctx = audioCtx; const now = ctx.currentTime; const osc = ctx.createOscillator(); const gain = ctx.createGain(); const filter = ctx.createBiquadFilter(); osc.frequency.setValueAtTime(150,now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); filter.type='lowpass'; filter.frequency.value=800; osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.3); osc.start(now); osc.stop(now+0.3); }
@@ -206,7 +207,6 @@ function tick(){
   if(remaining<=0){ document.dispatchEvent(new Event('timer-finished')); stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } 
   remaining--; 
   window.timerState = { remaining, duration, currentMode, isRunning };
-  console.error('[TICK]', remaining, '/', duration); // Use console.error so it's red and visible
   updateDisplay(); 
   saveTimerState(); 
   dispatchTimerTick(); 
@@ -547,6 +547,29 @@ function renderTasks(){
     const stat = document.createElement('div');
     stat.className = 'task-card-stat';
     stat.textContent = `${t.completed || 0}/${t.target || 1}`;
+
+    if(cardEditMode){
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'card-corner-btn corner-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        editTask(t.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'card-corner-btn corner-delete';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        deleteTask(t.id);
+      });
+
+      card.appendChild(editBtn);
+      card.appendChild(deleteBtn);
+    }
     
     card.appendChild(title);
     card.appendChild(stat);
@@ -555,7 +578,6 @@ function renderTasks(){
     $taskList.appendChild(card);
   });
   updateActiveTaskDisplay();
-  updateDeleteButton();
 }
 
 function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.push(t); saveTasks(); renderTasks(); }
@@ -569,14 +591,55 @@ function deleteTask(id){
   saveTasks();
   renderTasks();
 }
-function updateDeleteButton(){
-  const $deleteBtn = document.getElementById('deleteTaskBtn');
-  if(!$deleteBtn) return;
-  if(activeTaskId){
-    $deleteBtn.style.display = 'block';
-  } else {
-    $deleteBtn.style.display = 'none';
-  }
+function editTask(id){
+  const task = tasks.find(x=>x.id===id);
+  if(!task) return;
+  const newTitle = prompt('Edit task title:', task.title);
+  if(newTitle === null) return;
+  const trimmedTitle = newTitle.trim();
+  if(!trimmedTitle) return;
+  const currentTarget = Number(task.target || 1);
+  const newTargetRaw = prompt('Edit pomodoro target count:', String(currentTarget));
+  if(newTargetRaw === null) return;
+  const parsed = parseInt(newTargetRaw, 10);
+  const nextTarget = Number.isFinite(parsed) ? Math.max(1, parsed) : currentTarget;
+  task.title = trimmedTitle;
+  task.target = nextTarget;
+  saveTasks();
+  renderTasks();
+}
+
+function editBreakItem(type, id){
+  const list = type === 'short' ? breaks.short : breaks.long;
+  const item = list.find(x=>x.id===id);
+  if(!item) return;
+  const newText = prompt('Edit break item name:', item.text);
+  if(newText === null) return;
+  const trimmedText = newText.trim();
+  if(!trimmedText) return;
+  const currentTarget = Number(item.target || 1);
+  const newTargetRaw = prompt('Edit break target count:', String(currentTarget));
+  if(newTargetRaw === null) return;
+  const parsed = parseInt(newTargetRaw, 10);
+  const nextTarget = Number.isFinite(parsed) ? Math.max(1, parsed) : currentTarget;
+  item.text = trimmedText;
+  item.target = nextTarget;
+  saveBreaks();
+  renderBreaks();
+  updateActiveTaskDisplay();
+}
+
+function toggleCardEditMode(){
+  cardEditMode = !cardEditMode;
+  updateEditModeButton();
+  renderTasks();
+  renderBreaks();
+}
+
+function updateEditModeButton(){
+  const $editModeBtn = document.getElementById('editModeBtn');
+  if(!$editModeBtn) return;
+  $editModeBtn.textContent = cardEditMode ? 'Done' : 'Edit';
 }
 function changeTarget(id, delta){ const t = tasks.find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
 function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short' ? breaks.short : breaks.long; const item = breaks_arr.find(x=>x.id===id); if(!item) return; item.target = Math.max(1, (item.target||1) + delta); saveBreaks(); renderBreaks(); }
@@ -627,25 +690,40 @@ function renderBreaks(){
     const stat = document.createElement('div');
     stat.className = 'task-card-stat';
     stat.textContent = `${it.completed || 0}/${it.target || 1}`;
+
+    if(cardEditMode){
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'card-corner-btn corner-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        editBreakItem('short', it.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'card-corner-btn corner-delete';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        breaks.short = breaks.short.filter(x=>x.id!==it.id);
+        if(activeShortBreakId===it.id) activeShortBreakId=null;
+        saveBreaks();
+        renderBreaks();
+        updateActiveTaskDisplay();
+        updateFinishButtonState();
+      });
+
+      card.appendChild(editBtn);
+      card.appendChild(deleteBtn);
+    }
     
     card.appendChild(title);
     card.appendChild(stat);
     
     card.addEventListener('click', ()=>{
       activeShortBreakId = it.id;
-      saveBreaks();
-      renderBreaks();
-      updateActiveTaskDisplay();
-      updateFinishButtonState();
-    });
-    
-    // Right-click to delete
-    card.addEventListener('contextmenu', (e)=>{
-      e.preventDefault();
-      const confirmed = confirm(`Delete break item "${it.text}"?`);
-      if(!confirmed) return;
-      breaks.short = breaks.short.filter(x=>x.id!==it.id);
-      if(activeShortBreakId===it.id) activeShortBreakId=null;
       saveBreaks();
       renderBreaks();
       updateActiveTaskDisplay();
@@ -671,25 +749,40 @@ function renderBreaks(){
     const stat = document.createElement('div');
     stat.className = 'task-card-stat';
     stat.textContent = `${it.completed || 0}/${it.target || 1}`;
+
+    if(cardEditMode){
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'card-corner-btn corner-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        editBreakItem('long', it.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'card-corner-btn corner-delete';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        breaks.long = breaks.long.filter(x=>x.id!==it.id);
+        if(activeLongBreakId===it.id) activeLongBreakId=null;
+        saveBreaks();
+        renderBreaks();
+        updateActiveTaskDisplay();
+        updateFinishButtonState();
+      });
+
+      card.appendChild(editBtn);
+      card.appendChild(deleteBtn);
+    }
     
     card.appendChild(title);
     card.appendChild(stat);
     
     card.addEventListener('click', ()=>{
       activeLongBreakId = it.id;
-      saveBreaks();
-      renderBreaks();
-      updateActiveTaskDisplay();
-      updateFinishButtonState();
-    });
-    
-    // Right-click to delete
-    card.addEventListener('contextmenu', (e)=>{
-      e.preventDefault();
-      const confirmed = confirm(`Delete break item "${it.text}"?`);
-      if(!confirmed) return;
-      breaks.long = breaks.long.filter(x=>x.id!==it.id);
-      if(activeLongBreakId===it.id) activeLongBreakId=null;
       saveBreaks();
       renderBreaks();
       updateActiveTaskDisplay();
@@ -729,18 +822,15 @@ function resetBreakPours(){ pourCounts.break = 0; savePours(); renderPours(); }
 // Hook up forms
 $taskForm.addEventListener('submit', (e)=>{
   e.preventDefault();
-  if(activeTaskId) return;
   const t=$taskTitle.value.trim();
   if(!t) return;
   addTask(t);
   $taskTitle.value='';
 });
 
-const $deleteTaskBtn = document.getElementById('deleteTaskBtn');
-if($deleteTaskBtn){
-  $deleteTaskBtn.addEventListener('click', ()=>{
-    if(activeTaskId){ deleteTask(activeTaskId); }
-  });
+const $editModeBtn = document.getElementById('editModeBtn');
+if($editModeBtn){
+  $editModeBtn.addEventListener('click', toggleCardEditMode);
 }
 
 if($shortBreakForm && $shortBreakInput){ $shortBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$shortBreakInput.value.trim(); if(!v) return; breaks.short.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $shortBreakInput.value=''; }); }
@@ -814,6 +904,7 @@ document.querySelectorAll('.mode').forEach(btn=>{
 $status.textContent = (remaining === duration) ? 'Ready' : 'Paused';
 loadTasks(); 
 loadBreaks();
+updateEditModeButton();
 setupSortable();
 loadBudgets();
 loadPours();
