@@ -90,16 +90,13 @@ class GraphicsController {
     this.host.classList.remove('immersive-hidden');
     this.calculateScale();
     
-    // Sync current timer state from app.js
-    if (typeof remaining !== 'undefined') {
-      this.remaining = remaining;
-    }
-    if (typeof duration !== 'undefined') {
-      this.totalDuration = duration;
-      this.fillPercentage = (duration - this.remaining) / duration;
-    }
-    if (typeof currentMode !== 'undefined') {
-      this.mode = currentMode;
+    // Sync current timer state from window.timerState
+    if (window.timerState) {
+      this.remaining = window.timerState.remaining;
+      this.totalDuration = window.timerState.duration;
+      this.fillPercentage = (this.totalDuration - this.remaining) / this.totalDuration;
+      this.mode = window.timerState.currentMode;
+      this.timerIsRunning = window.timerState.isRunning;
     }
     
     // Update overlay with current state
