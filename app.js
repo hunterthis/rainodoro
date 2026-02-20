@@ -549,7 +549,11 @@ function renderTasks(){
     
     const stat = document.createElement('div');
     stat.className = 'task-card-stat';
-    stat.textContent = `${t.completed || 0}/${t.target || 1}`;
+    stat.textContent = `Done: ${t.completed || 0}`;
+
+    const pomosLabel = document.createElement('div');
+    pomosLabel.className = 'task-card-pomos';
+    pomosLabel.textContent = `Pomos: ${t.target || 1}`;
 
     if(cardEditMode){
       const editBtn = document.createElement('button');
@@ -576,6 +580,7 @@ function renderTasks(){
     
     card.appendChild(title);
     card.appendChild(stat);
+    card.appendChild(pomosLabel);
     
     card.addEventListener('click', ()=>{ selectTask(t.id); });
     setupDragHandlers(card, 'tasks', index);
