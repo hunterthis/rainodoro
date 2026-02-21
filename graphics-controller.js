@@ -87,6 +87,7 @@ class GraphicsController {
   enterAnimation() {
     if (this.isActive) return;
     this.isActive = true;
+    document.body.classList.add('immersive-active');
     this.host.classList.remove('immersive-hidden');
     this.calculateScale();
     
@@ -105,6 +106,7 @@ class GraphicsController {
   exitAnimation() {
     if (!this.isActive) return;
     this.isActive = false;
+    document.body.classList.remove('immersive-active');
     this.host.classList.add('immersive-hidden');
     this.stopAnimation();
   }
