@@ -27,6 +27,7 @@ const $water = document.getElementById('water');
 const $status = document.getElementById('status');
 const $taskForm = document.getElementById('taskForm');
 const $taskTitle = document.getElementById('taskTitle');
+const $taskTitleWarning = document.getElementById('taskTitleWarning');
 const $taskList = document.getElementById('taskList');
 const $activeTaskDisplay = document.getElementById('activeTaskDisplay');
 const $shortBreakForm = document.getElementById('shortBreakForm');
@@ -608,6 +609,10 @@ function editTask(id){
   if(newTitle === null) return;
   const trimmedTitle = newTitle.trim();
   if(!trimmedTitle) return;
+  if(trimmedTitle.length > 50){
+    alert('Task title is over 50 characters. Please shorten it.');
+    return;
+  }
   const currentTarget = Number(task.target || 1);
   const newTargetRaw = prompt('Edit pomodoro target count:', String(currentTarget));
   if(newTargetRaw === null) return;
@@ -617,6 +622,13 @@ function editTask(id){
   task.target = nextTarget;
   saveTasks();
   renderTasks();
+}
+
+function validateTaskTitleLength(){
+  if(!$taskTitle || !$taskTitleWarning) return true;
+  const tooLong = $taskTitle.value.trim().length > 50;
+  $taskTitleWarning.style.display = tooLong ? 'block' : 'none';
+  return !tooLong;
 }
 
 function editBreakItem(type, id){
@@ -887,9 +899,15 @@ $taskForm.addEventListener('submit', (e)=>{
   e.preventDefault();
   const t=$taskTitle.value.trim();
   if(!t) return;
+  if(!validateTaskTitleLength()) return;
   addTask(t);
   $taskTitle.value='';
+  validateTaskTitleLength();
 });
+
+if($taskTitle){
+  $taskTitle.addEventListener('input', validateTaskTitleLength);
+}
 
 const $editModeBtn = document.getElementById('editModeBtn');
 if($editModeBtn){
