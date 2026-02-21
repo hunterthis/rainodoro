@@ -660,8 +660,9 @@ function toggleCardEditMode(){
 
 function updateEditModeButton(){
   const $editModeBtn = document.getElementById('editModeBtn');
-  if(!$editModeBtn) return;
-  $editModeBtn.textContent = cardEditMode ? 'Done' : 'Edit';
+  const $editModeBtnBreak = document.getElementById('editModeBtnBreak');
+  if($editModeBtn) $editModeBtn.textContent = cardEditMode ? 'Done' : 'Edit';
+  if($editModeBtnBreak) $editModeBtnBreak.textContent = cardEditMode ? 'Done' : 'Edit';
 }
 function changeTarget(id, delta){ const t = tasks.find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
 function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short' ? breaks.short : breaks.long; const item = breaks_arr.find(x=>x.id===id); if(!item) return; item.target = Math.max(1, (item.target||1) + delta); saveBreaks(); renderBreaks(); }
@@ -912,6 +913,11 @@ if($taskTitle){
 const $editModeBtn = document.getElementById('editModeBtn');
 if($editModeBtn){
   $editModeBtn.addEventListener('click', toggleCardEditMode);
+}
+
+const $editModeBtnBreak = document.getElementById('editModeBtnBreak');
+if($editModeBtnBreak){
+  $editModeBtnBreak.addEventListener('click', toggleCardEditMode);
 }
 
 if($shortBreakForm && $shortBreakInput){ $shortBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$shortBreakInput.value.trim(); if(!v) return; breaks.short.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $shortBreakInput.value=''; }); }
