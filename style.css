@@ -24,15 +24,16 @@ h1{margin:0;font-size:28px}
 .info-content p{margin:0 0 8px 0}
 .info-content p:last-child{margin-bottom:0}
 .tagline{margin:0;color:var(--muted)}
-.controls{grid-area:controls;display:flex;gap:20px;align-items:center;margin-top:0;width:100%}
+.controls{grid-area:controls;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin-top:0;width:100%}
 .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:232px;flex:0 0 232px}
 .mode{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;min-width:0;height:36px;display:flex;align-items:center;justify-content:center;font-weight:500;line-height:1;box-sizing:border-box}
 .mode.active{background:var(--accent);color:#041024;border:1px solid rgba(255,255,255,0.06)}
+.controls .modes{grid-column:2;justify-self:center}
 .timer{flex:1;text-align:center}
 #time{font-size:48px;font-weight:600}
 .buttons{display:flex;gap:8px;justify-content:center;margin-top:8px}
 .buttons button{padding:8px 12px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer}
-.settings{display:inline-flex;flex-direction:row;gap:8px;color:var(--muted);align-items:center;flex-wrap:nowrap;white-space:nowrap}
+.settings{display:inline-flex;flex-direction:row;gap:8px;color:var(--muted);align-items:center;flex-wrap:nowrap;white-space:nowrap;grid-column:3;justify-self:end}
 .settings label{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin:0}
 .settings input[type="range"]{width:120px}
 .mute-btn{padding:6px 12px;border-radius:20px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;font-size:12px;transition:background 0.2s;margin-top:0;align-self:center}
