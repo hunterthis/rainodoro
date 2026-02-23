@@ -22,11 +22,6 @@
         <button data-mode="pomodoro" class="mode active">Pomodoro</button>
         <button data-mode="short" class="mode">Break</button>
       </div>
-
-      <div class="settings">
-        <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
-        <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
-      </div>
     </section>
 
     <aside class="sidebar">
@@ -124,6 +119,12 @@
               <button id="resetTimeBtn" class="reset-stat-btn" title="Clear completed pomos (resets time)">Reset</button>
             </div>
             <div id="timeBreakdown" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+          </div>
+        </div>
+        <div class="audio-controls-panel">
+          <div class="settings">
+            <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
+            <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
           </div>
         </div>
       </div>
