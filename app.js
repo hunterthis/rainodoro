@@ -400,8 +400,9 @@ function setMode(newMode, options = {}){
 
 function handlePomodoroCompletion(){
   onPomodoroFinished();
-  showToast('Pomodoro finished — now it\'s time for a short break.');
-  setMode('short', {reset:true, statusText:'Short break (ready)'});
+  showToast('Pomodoro finished.');
+  $status.textContent = 'Finished';
+  saveTimerState();
 }
 
 function onBreakFinished(){
@@ -443,8 +444,9 @@ function finishCurrentItem(){
   }
   if(currentMode === 'short' || currentMode === 'long'){
     onBreakFinished();
-    showToast('Break finished — returning to pomodoro mode.');
-    setMode('pomodoro', {reset:true, statusText:'Pomodoro (ready)'});
+    showToast('Break finished.');
+    $status.textContent = 'Finished';
+    saveTimerState();
   }
 }
 
