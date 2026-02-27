@@ -60,6 +60,7 @@ let activeShortBreakId = null;
 let activeLongBreakId = null;
 let budgets = {pomodoro: 0, short: 0, long: 0};
 let pourCounts = {pomodoro: 0, break: 0};
+let finishedTasks = [];
 
 const TASKS_KEY = 'rainodoro_tasks_v1';
 const BREAKS_KEY = 'rainodoro_breaks_v1';
@@ -68,6 +69,7 @@ const POURS_KEY = 'rainodoro_pours_v1';
 const TIMER_STATE_KEY = 'rainodoro_timer_v1';
 const BREAK_PLUS_TEN_KEY = 'rainodoro_break_plus_ten_v1';
 const SESSION_HISTORY_KEY = 'rainodoro_session_history_v1';
+const FINISHED_TASKS_KEY = 'rainodoro_finished_tasks_v1';
 const TASK_SHEETS_VERSION = 2;
 const TASK_SHEETS_LIMIT = 20;
 
@@ -145,6 +147,29 @@ function ensureTaskSheets(){
     activeTaskSheetId = taskSheets[0].id;
   }
   syncActiveTaskFromSheet();
+}
+function loadFinishedTasks(){
+  try{
+    const raw = localStorage.getItem(FINISHED_TASKS_KEY);
+    finishedTasks = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(finishedTasks)) finishedTasks = [];
+  }catch(e){
+    finishedTasks = [];
+  }
+}
+function saveFinishedTasks(){
+  localStorage.setItem(FINISHED_TASKS_KEY, JSON.stringify(finishedTasks));
+}
+function archiveFinishedTask(task, sheetName){
+  finishedTasks.unshift({
+    id: task.id,
+    title: task.title,
+    target: task.target || 1,
+    completed: task.completed || 0,
+    sheetName: sheetName || 'Sheet',
+    finishedAt: Date.now()
+  });
+  saveFinishedTasks();
 }
 
 // WebAudio rain noise
@@ -410,8 +435,8 @@ function resetCurrentModeAfterCompletion(){
   $status.textContent = getCurrentModeReadyStatus();
 }
 
-function handlePomodoroCompletion(){
-  onPomodoroFinished();
+function handlePomodoroCompletion(options = {}){
+  onPomodoroFinished(options);
   showToast('Pomodoro finished.');
   resetCurrentModeAfterCompletion();
 }
@@ -450,7 +475,7 @@ function finishCurrentItem(){
   setRainVolume(0);
   disableRainAnimation();
   if(currentMode === 'pomodoro'){
-    handlePomodoroCompletion();
+    handlePomodoroCompletion({removeTask:true});
     return;
   }
   if(currentMode === 'short' || currentMode === 'long'){
@@ -1085,12 +1110,20 @@ function renderPomoStatsPanel(){
   const timeBreakdownEl = document.getElementById('timeBreakdown');
 
   const trackedTasks = getAllTasks().filter(t => (t.completed || 0) > 0);
-  if(tasksCountEl) tasksCountEl.textContent = String(trackedTasks.length);
+  const finishedTaskItems = [...finishedTasks, ...trackedTasks.map(t=>({
+    title: t.title,
+    completed: t.completed || 0,
+    target: t.target || 1,
+    sheetName: null,
+    finishedAt: null
+  }))];
+  if(tasksCountEl) tasksCountEl.textContent = String(finishedTaskItems.length);
   if(tasksPanelList){
     tasksPanelList.innerHTML = '';
-    trackedTasks.forEach(t => {
+    finishedTaskItems.forEach(t => {
       const li = document.createElement('li');
-      li.textContent = `${t.title}: ${t.completed || 0}/${t.target || 1}`;
+      const suffix = t.sheetName ? ` • ${t.sheetName}` : '';
+      li.textContent = `${t.title}: ${t.completed || 0}/${t.target || 1}${suffix}`;
       tasksPanelList.appendChild(li);
     });
   }
@@ -1231,6 +1264,8 @@ if($resetTasksBtn){
     taskSheets.forEach(sheet=>{
       (sheet.tasks || []).forEach(task=>{ task.completed = 0; });
     });
+    finishedTasks = [];
+    saveFinishedTasks();
     saveTasks();
     renderTasks();
     renderPomoStatsPanel();
@@ -1254,13 +1289,21 @@ if($resetTimeBtn){
 }
 
 // When a pomodoro finishes, attribute to active task if present
-function onPomodoroFinished(){
+function onPomodoroFinished(options = {}){
+  const {removeTask = false} = options;
   if(activeTaskId){
-    const t = getActiveTasks().find(x=>x.id===activeTaskId);
+    const activeSheet = getActiveTaskSheet();
+    const activeTasks = getActiveTasks();
+    const t = activeTasks.find(x=>x.id===activeTaskId);
     if(t){
       t.completed = (t.completed||0) + 1;
       const actualDuration = timerState.pomodoro.duration;
       recordSessionEvent('pomodoro', t.title, actualDuration, null);
+      if(removeTask){
+        archiveFinishedTask(t, activeSheet ? activeSheet.name : 'Sheet');
+        setActiveTasks(activeTasks.filter(task=>task.id !== t.id));
+        activeTaskId = null;
+      }
       syncActiveTaskToSheet();
       saveTasks();
       renderTasks();
@@ -1304,6 +1347,7 @@ document.querySelectorAll('.mode').forEach(btn=>{
 });
 $status.textContent = (remaining === duration) ? 'Ready' : 'Paused';
 loadTasks(); 
+loadFinishedTasks();
 loadBreaks();
 updateEditModeButton();
 setupSortable();
