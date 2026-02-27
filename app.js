@@ -29,6 +29,10 @@ const $taskForm = document.getElementById('taskForm');
 const $taskTitle = document.getElementById('taskTitle');
 const $taskTitleWarning = document.getElementById('taskTitleWarning');
 const $taskList = document.getElementById('taskList');
+const $taskSheetSelect = document.getElementById('taskSheetSelect');
+const $addTaskSheetBtn = document.getElementById('addTaskSheetBtn');
+const $renameTaskSheetBtn = document.getElementById('renameTaskSheetBtn');
+const $deleteTaskSheetBtn = document.getElementById('deleteTaskSheetBtn');
 const $activeTaskDisplay = document.getElementById('activeTaskDisplay');
 const $shortBreakForm = document.getElementById('shortBreakForm');
 const $shortBreakInput = document.getElementById('shortBreakInput');
@@ -48,7 +52,8 @@ window.timerVisible = timerVisible;
 let toastHideTimer = null;
 
 // data
-let tasks = [];
+let taskSheets = [];
+let activeTaskSheetId = null;
 let activeTaskId = null;
 let breaks = {short: [], long: []};
 let activeShortBreakId = null;
@@ -63,6 +68,84 @@ const POURS_KEY = 'rainodoro_pours_v1';
 const TIMER_STATE_KEY = 'rainodoro_timer_v1';
 const BREAK_PLUS_TEN_KEY = 'rainodoro_break_plus_ten_v1';
 const SESSION_HISTORY_KEY = 'rainodoro_session_history_v1';
+const TASK_SHEETS_VERSION = 2;
+const TASK_SHEETS_LIMIT = 20;
+
+function makeTaskSheetId(){
+  return `sheet_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+}
+function normalizeTask(task){
+  return {
+    id: task.id || Date.now().toString(),
+    title: task.title || 'Untitled Task',
+    target: Math.max(1, Number(task.target || 1)),
+    completed: Math.max(0, Number(task.completed || 0))
+  };
+}
+function normalizeSheet(sheet, fallbackName){
+  const tasks = Array.isArray(sheet.tasks) ? sheet.tasks.map(normalizeTask) : [];
+  return {
+    id: sheet.id || makeTaskSheetId(),
+    name: (sheet.name || fallbackName || 'Sheet').trim() || 'Sheet',
+    tasks,
+    activeTaskId: sheet.activeTaskId || null
+  };
+}
+function createTaskSheet(name){
+  return {
+    id: makeTaskSheetId(),
+    name,
+    tasks: [],
+    activeTaskId: null
+  };
+}
+function getTaskSheetById(sheetId){
+  return taskSheets.find(sheet => sheet.id === sheetId) || null;
+}
+function getActiveTaskSheet(){
+  return getTaskSheetById(activeTaskSheetId);
+}
+function getActiveTasks(){
+  const sheet = getActiveTaskSheet();
+  return sheet ? sheet.tasks : [];
+}
+function setActiveTasks(nextTasks){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  sheet.tasks = nextTasks;
+}
+function getAllTasks(){
+  return taskSheets.flatMap(sheet => Array.isArray(sheet.tasks) ? sheet.tasks : []);
+}
+function syncActiveTaskFromSheet(){
+  const sheet = getActiveTaskSheet();
+  activeTaskId = sheet ? sheet.activeTaskId || null : null;
+}
+function syncActiveTaskToSheet(){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  sheet.activeTaskId = activeTaskId || null;
+}
+function getNextSheetName(){
+  for(let index = 1; index <= TASK_SHEETS_LIMIT; index++){
+    const candidate = `Sheet ${index}`;
+    const exists = taskSheets.some(sheet => sheet.name === candidate);
+    if(!exists) return candidate;
+  }
+  return `Sheet ${taskSheets.length + 1}`;
+}
+function ensureTaskSheets(){
+  if(taskSheets.length === 0){
+    taskSheets = [createTaskSheet('Sheet 1')];
+    activeTaskSheetId = taskSheets[0].id;
+    activeTaskId = null;
+    return;
+  }
+  if(!activeTaskSheetId || !getTaskSheetById(activeTaskSheetId)){
+    activeTaskSheetId = taskSheets[0].id;
+  }
+  syncActiveTaskFromSheet();
+}
 
 // WebAudio rain noise
 let audioCtx, rainGain, rainSource;
@@ -423,8 +506,117 @@ function loadTimerState(){
 }
 
 // Task & break persistence and UI
-function loadTasks(){ try{ const raw = localStorage.getItem(TASKS_KEY); tasks = raw ? JSON.parse(raw) : []; activeTaskId = tasks.find(t=>t.isActive)?.id || null; }catch(e){ tasks=[] } renderTasks(); }
-function saveTasks(){ localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
+function loadTasks(){
+  try{
+    const raw = localStorage.getItem(TASKS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if(Array.isArray(parsed)){
+      const legacyActiveId = parsed.find(task=>task && task.isActive)?.id || null;
+      const legacyTasks = parsed.map(normalizeTask);
+      const sheet = createTaskSheet('Sheet 1');
+      sheet.tasks = legacyTasks;
+      sheet.activeTaskId = legacyActiveId;
+      taskSheets = [sheet];
+      activeTaskSheetId = sheet.id;
+    } else if(parsed && Array.isArray(parsed.sheets)){
+      taskSheets = parsed.sheets.map((sheet, index)=>normalizeSheet(sheet, `Sheet ${index + 1}`));
+      activeTaskSheetId = parsed.activeTaskSheetId || taskSheets[0]?.id || null;
+    } else {
+      taskSheets = [];
+      activeTaskSheetId = null;
+    }
+  }catch(e){
+    taskSheets = [];
+    activeTaskSheetId = null;
+  }
+  ensureTaskSheets();
+  renderTaskSheets();
+  renderTasks();
+}
+function saveTasks(){
+  const payload = {
+    version: TASK_SHEETS_VERSION,
+    activeTaskSheetId,
+    sheets: taskSheets
+  };
+  localStorage.setItem(TASKS_KEY, JSON.stringify(payload));
+}
+function renderTaskSheets(){
+  if(!$taskSheetSelect) return;
+  $taskSheetSelect.innerHTML = '';
+  taskSheets.forEach((sheet, index)=>{
+    const option = document.createElement('option');
+    option.value = sheet.id;
+    option.textContent = sheet.name || `Sheet ${index + 1}`;
+    $taskSheetSelect.appendChild(option);
+  });
+  if(activeTaskSheetId){
+    $taskSheetSelect.value = activeTaskSheetId;
+  }
+  const canMutate = taskSheets.length > 0;
+  if($renameTaskSheetBtn) $renameTaskSheetBtn.disabled = !canMutate;
+  if($deleteTaskSheetBtn) $deleteTaskSheetBtn.disabled = !canMutate;
+}
+function setActiveTaskSheet(sheetId){
+  const sheet = getTaskSheetById(sheetId);
+  if(!sheet) return;
+  activeTaskSheetId = sheet.id;
+  syncActiveTaskFromSheet();
+  renderTaskSheets();
+  renderTasks();
+  saveTasks();
+}
+function createTaskSheetPrompt(){
+  if(taskSheets.length >= TASK_SHEETS_LIMIT){
+    alert(`You can only have up to ${TASK_SHEETS_LIMIT} sheets.`);
+    return;
+  }
+  const defaultName = getNextSheetName();
+  const nameInput = prompt('New sheet name:', defaultName);
+  if(nameInput === null) return;
+  const name = nameInput.trim() || defaultName;
+  const sheet = createTaskSheet(name);
+  taskSheets.push(sheet);
+  setActiveTaskSheet(sheet.id);
+  saveTasks();
+}
+function renameTaskSheetPrompt(){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  const nameInput = prompt('Rename sheet:', sheet.name);
+  if(nameInput === null) return;
+  const name = nameInput.trim();
+  if(!name) return;
+  sheet.name = name;
+  renderTaskSheets();
+  saveTasks();
+}
+function deleteTaskSheetPrompt(){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  const sheetTasks = Array.isArray(sheet.tasks) ? sheet.tasks : [];
+  const confirmed = confirm(`Delete sheet "${sheet.name}"? Tasks in this sheet will be moved to a different sheet.`);
+  if(!confirmed) return;
+  if(taskSheets.length <= 1){
+    taskSheets = [createTaskSheet('Sheet 1')];
+    activeTaskSheetId = taskSheets[0].id;
+    activeTaskId = null;
+    saveTasks();
+    renderTaskSheets();
+    renderTasks();
+    return;
+  }
+  const destination = taskSheets.find(s=>s.id !== sheet.id) || null;
+  taskSheets = taskSheets.filter(s=>s.id !== sheet.id);
+  if(destination){
+    destination.tasks = [...sheetTasks, ...destination.tasks];
+  }
+  activeTaskSheetId = destination ? destination.id : taskSheets[0].id;
+  syncActiveTaskFromSheet();
+  saveTasks();
+  renderTaskSheets();
+  renderTasks();
+}
 function hasSortable(){ return typeof Sortable !== 'undefined'; }
 function isTouchDevice(){
   return window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -437,7 +629,7 @@ function reorderFromDom(listType, listEl){
   const map = new Map(list.map(item=>[item.id, item]));
   const reordered = ids.map(id=>map.get(id)).filter(Boolean);
   list.forEach(item=>{ if(!ids.includes(item.id)) reordered.push(item); });
-  if(listType === 'tasks'){ tasks = reordered; saveTasks(); renderTasks(); }
+  if(listType === 'tasks'){ setActiveTasks(reordered); saveTasks(); renderTasks(); }
   else if(listType === 'shortBreaks'){ breaks.short = reordered; saveBreaks(); renderBreaks(); }
   else if(listType === 'longBreaks'){ breaks.long = reordered; saveBreaks(); renderBreaks(); }
   updateActiveTaskDisplay();
@@ -483,7 +675,7 @@ function getDragData(event){
   catch(e){ return null; }
 }
 function getListByType(listType){
-  if(listType === 'tasks') return tasks;
+  if(listType === 'tasks') return getActiveTasks();
   if(listType === 'shortBreaks') return breaks.short;
   if(listType === 'longBreaks') return breaks.long;
   return null;
@@ -537,8 +729,10 @@ function setupDragHandlers(li, listType, index){
   li.querySelectorAll('button').forEach(btn=>{ btn.draggable = false; });
 }
 function renderTasks(){
+  renderTaskSheets();
   $taskList.innerHTML='';
-  tasks.forEach((t, index)=>{
+  const activeTasks = getActiveTasks();
+  activeTasks.forEach((t, index)=>{
     const card = document.createElement('div');
     card.className = 'task-card';
     card.dataset.id = t.id;
@@ -575,8 +769,18 @@ function renderTasks(){
         deleteTask(t.id);
       });
 
+      const moveBtn = document.createElement('button');
+      moveBtn.type = 'button';
+      moveBtn.className = 'card-corner-btn corner-move';
+      moveBtn.textContent = 'Move';
+      moveBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        moveTaskToSheetPrompt(t.id);
+      });
+
       card.appendChild(editBtn);
       card.appendChild(deleteBtn);
+      card.appendChild(moveBtn);
     }
     
     card.appendChild(title);
@@ -591,19 +795,21 @@ function renderTasks(){
   renderPomoStatsPanel();
 }
 
-function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.unshift(t); saveTasks(); renderTasks(); }
+function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; const activeTasks = getActiveTasks(); activeTasks.unshift(t); saveTasks(); renderTasks(); }
 function deleteTask(id){
-  const t = tasks.find(x=>x.id===id);
+  const activeTasks = getActiveTasks();
+  const t = activeTasks.find(x=>x.id===id);
   if(!t) return;
   const confirmed = confirm(`Delete task "${t.title}"? It will be removed, but the completed count will be preserved.`);
   if(!confirmed) return;
-  tasks = tasks.filter(x=>x.id!==id);
+  setActiveTasks(activeTasks.filter(x=>x.id!==id));
   if(activeTaskId===id) activeTaskId=null;
+  syncActiveTaskToSheet();
   saveTasks();
   renderTasks();
 }
 function editTask(id){
-  const task = tasks.find(x=>x.id===id);
+  const task = getActiveTasks().find(x=>x.id===id);
   if(!task) return;
   const newTitle = prompt('Edit task title:', task.title);
   if(newTitle === null) return;
@@ -622,6 +828,38 @@ function editTask(id){
   task.target = nextTarget;
   saveTasks();
   renderTasks();
+}
+function moveTaskToSheetPrompt(taskId){
+  if(taskSheets.length < 2){
+    alert('Create another sheet first to move tasks.');
+    return;
+  }
+  const sourceSheet = getActiveTaskSheet();
+  if(!sourceSheet) return;
+  const sourceTasks = sourceSheet.tasks || [];
+  const taskIndex = sourceTasks.findIndex(task=>task.id===taskId);
+  if(taskIndex < 0) return;
+  const destinations = taskSheets.filter(sheet=>sheet.id !== sourceSheet.id);
+  if(destinations.length === 0) return;
+  const destinationText = destinations.map((sheet, index)=>`${index + 1}. ${sheet.name}`).join('\n');
+  const choice = prompt(`Move task to which sheet?\n${destinationText}`, '1');
+  if(choice === null) return;
+  const destinationIndex = parseInt(choice, 10) - 1;
+  if(!Number.isFinite(destinationIndex) || destinationIndex < 0 || destinationIndex >= destinations.length){
+    alert('Invalid choice.');
+    return;
+  }
+  const destinationSheet = destinations[destinationIndex];
+  const [task] = sourceTasks.splice(taskIndex, 1);
+  destinationSheet.tasks.unshift(task);
+  if(sourceSheet.activeTaskId === taskId){
+    sourceSheet.activeTaskId = null;
+    activeTaskId = null;
+  }
+  syncActiveTaskToSheet();
+  saveTasks();
+  renderTasks();
+  showToast(`Moved to ${destinationSheet.name}.`);
 }
 
 function validateTaskTitleLength(){
@@ -664,13 +902,13 @@ function updateEditModeButton(){
   if($editModeBtn) $editModeBtn.textContent = cardEditMode ? 'Done' : 'Edit';
   if($editModeBtnBreak) $editModeBtnBreak.textContent = cardEditMode ? 'Done' : 'Edit';
 }
-function changeTarget(id, delta){ const t = tasks.find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
+function changeTarget(id, delta){ const t = getActiveTasks().find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
 function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short' ? breaks.short : breaks.long; const item = breaks_arr.find(x=>x.id===id); if(!item) return; item.target = Math.max(1, (item.target||1) + delta); saveBreaks(); renderBreaks(); }
-function selectTask(id){ activeTaskId = id; saveTasks(); renderTasks(); updateActiveTaskDisplay(); }
+function selectTask(id){ activeTaskId = id; syncActiveTaskToSheet(); saveTasks(); renderTasks(); updateActiveTaskDisplay(); }
 function updateActiveTaskDisplay(){ 
   if(currentMode === 'pomodoro'){
     if(!activeTaskId){ $activeTaskDisplay.textContent='No task selected'; return } 
-    const t = tasks.find(x=>x.id===activeTaskId); 
+    const t = getActiveTasks().find(x=>x.id===activeTaskId); 
     if(!t){ $activeTaskDisplay.textContent='No task selected'; return } 
     $activeTaskDisplay.textContent = t.title
   } else if(currentMode === 'short'){
@@ -834,7 +1072,7 @@ function renderPomoStatsPanel(){
   const totalPomoTimeEl = document.getElementById('totalPomoTime');
   const timeBreakdownEl = document.getElementById('timeBreakdown');
 
-  const trackedTasks = tasks.filter(t => (t.completed || 0) > 0);
+  const trackedTasks = getAllTasks().filter(t => (t.completed || 0) > 0);
   if(tasksCountEl) tasksCountEl.textContent = String(trackedTasks.length);
   if(tasksPanelList){
     tasksPanelList.innerHTML = '';
@@ -896,6 +1134,21 @@ function resetPomoPours(){ pourCounts.pomodoro = 0; savePours(); renderPours(); 
 function resetBreakPours(){ pourCounts.break = 0; savePours(); renderPours(); }
 
 // Hook up forms
+if($taskSheetSelect){
+  $taskSheetSelect.addEventListener('change', (event)=>{
+    setActiveTaskSheet(event.target.value);
+  });
+}
+if($addTaskSheetBtn){
+  $addTaskSheetBtn.addEventListener('click', createTaskSheetPrompt);
+}
+if($renameTaskSheetBtn){
+  $renameTaskSheetBtn.addEventListener('click', renameTaskSheetPrompt);
+}
+if($deleteTaskSheetBtn){
+  $deleteTaskSheetBtn.addEventListener('click', deleteTaskSheetPrompt);
+}
+
 $taskForm.addEventListener('submit', (e)=>{
   e.preventDefault();
   const t=$taskTitle.value.trim();
@@ -963,7 +1216,9 @@ if($statsTimeBtn) $statsTimeBtn.addEventListener('click', ()=> showStatsSection(
 
 if($resetTasksBtn){
   $resetTasksBtn.addEventListener('click', ()=>{
-    tasks.forEach(t => { t.completed = 0; });
+    taskSheets.forEach(sheet=>{
+      (sheet.tasks || []).forEach(task=>{ task.completed = 0; });
+    });
     saveTasks();
     renderTasks();
     renderPomoStatsPanel();
@@ -989,11 +1244,12 @@ if($resetTimeBtn){
 // When a pomodoro finishes, attribute to active task if present
 function onPomodoroFinished(){
   if(activeTaskId){
-    const t = tasks.find(x=>x.id===activeTaskId);
+    const t = getActiveTasks().find(x=>x.id===activeTaskId);
     if(t){
       t.completed = (t.completed||0) + 1;
       const actualDuration = timerState.pomodoro.duration;
       recordSessionEvent('pomodoro', t.title, actualDuration, null);
+      syncActiveTaskToSheet();
       saveTasks();
       renderTasks();
     }

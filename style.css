@@ -65,6 +65,9 @@ h1{margin:0;font-size:28px}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .section-header h3{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#e6eef6}
 .section-controls{display:flex;align-items:center;gap:6px}
+.task-sheet-row{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.task-sheet-row select{flex:1;min-width:0;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#e6eef6}
+.task-sheet-row .count-btn{padding:5px 8px}
 .count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
 .count-display{font-size:12px;color:var(--muted);min-width:20px;text-align:center}
 .task-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;max-height:none;overflow-y:visible;padding:0}
@@ -80,6 +83,7 @@ h1{margin:0;font-size:28px}
 .card-corner-btn{position:absolute;padding:2px 5px;border-radius:4px;border:1px solid rgba(255,255,255,0.18);background:#17324b;color:#e6f0fb;cursor:pointer;font-size:9px;line-height:1;z-index:2}
 .corner-edit{top:6px;left:6px}
 .corner-delete{top:6px;right:6px}
+.corner-move{bottom:6px;right:6px}
 body.immersive-active .card-corner-btn{display:none !important}
  .target-controls{display:inline-flex;align-items:center;gap:8px}
  .target-controls button{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer}

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Rainodoro</title>
-  <link rel="stylesheet" href="style.css?v=20260223a">
+  <link rel="stylesheet" href="style.css?v=20260227b">
 </head>
 <body>
   <main class="app">
@@ -33,6 +33,12 @@
             <span id="pomoCount" class="count-display">0</span>
             <button id="pomoInc" class="count-btn">+</button>
           </div>
+        </div>
+        <div class="task-sheet-row">
+          <select id="taskSheetSelect" aria-label="Task Sheet"></select>
+          <button id="addTaskSheetBtn" type="button" class="count-btn" title="Create sheet">＋</button>
+          <button id="renameTaskSheetBtn" type="button" class="count-btn" title="Rename sheet">✎</button>
+          <button id="deleteTaskSheetBtn" type="button" class="count-btn" title="Delete sheet">🗑</button>
         </div>
         <form id="taskForm" style="display:flex;gap:6px;margin-bottom:10px">
           <input id="taskTitle" placeholder="New task title" required style="flex:1" />
@@ -169,6 +175,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <script src="graphics-controller.js?v=20260220p"></script>
-  <script src="app.js?v=20260227a"></script>
+  <script src="app.js?v=20260227d"></script>
 </body>
 </html>
