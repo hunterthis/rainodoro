@@ -1443,7 +1443,7 @@ function updateFormsVisibility(){
 }
 
 // focus mode toggle
-if($focusToggle){ $focusToggle.addEventListener('click', ()=>{ focusMode = !focusMode; document.querySelector('.app').classList.toggle('focus-mode', focusMode); $focusToggle.textContent = focusMode ? 'Esc' : 'Ultra Focus Mode'; $focusToggle.title = focusMode ? 'Esc — Exit Focus Mode' : 'Ultra Focus Mode'; }); }
+if($focusToggle){ $focusToggle.addEventListener('click', ()=>{ focusMode = !focusMode; document.querySelector('.app').classList.toggle('focus-mode', focusMode); $focusToggle.textContent = focusMode ? '⛶' : 'Ultra Focus Mode'; $focusToggle.title = focusMode ? 'Exit Focus Mode' : 'Ultra Focus Mode'; }); }
 
 // info section toggle
 const $infoToggle = document.getElementById('infoToggle');
