@@ -56,13 +56,19 @@ h1{margin:0;font-size:28px}
 .settings input[type="range"]{width:120px}
 .pour-btn{display:inline-block}
 
-.app.focus-mode .visual{margin:0;flex-direction:column;justify-content:center;align-items:center;gap:32px;width:100%}
+.app.focus-mode .visual{margin:0;flex-direction:column;justify-content:flex-start;align-items:center;gap:24px;width:100%;padding-top:8vh}
 .app.focus-mode .sidepanel{display:flex;flex-direction:column;align-items:center}
 .app.focus-mode .timer-compact{min-width:auto}
 .app.focus-mode .active-task{font-size:24px;color:#e6eef6;font-weight:600;margin-top:24px}
 .app.focus-mode .status{margin:0;font-size:14px}
 .app.focus-mode .pour-stats{display:none}
 .app.focus-mode .section form,.app.focus-mode .controls,.app.focus-mode .sidebar{display:none}
+.app.focus-mode #pomoStatsToggle,
+.app.focus-mode #pomoStatsPanel{width:min(100%,260px)}
+.app.focus-mode .stats-subnav{display:flex !important;flex-direction:column;gap:8px;margin-top:8px !important;width:100%}
+.app.focus-mode .stats-subnav .timer-toggle-btn{width:100%;margin-top:0}
+.app.focus-mode .audio-controls-panel{justify-content:center}
+.app.focus-mode .audio-controls-panel .settings{justify-content:center;width:min(100%,260px)}
 .sidebar{grid-area:sidebar;position:relative;width:100%;margin:0;padding:0 0 0 24px;border-left:1px solid rgba(78,168,222,0.1);background:transparent;display:flex;flex-direction:column;gap:16px;max-height:none;overflow:visible}
 .section{margin-bottom:12px;flex-shrink:0}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
