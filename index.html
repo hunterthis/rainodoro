@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Rainodoro</title>
-  <link rel="stylesheet" href="style.css?v=20260227k">
+  <link rel="stylesheet" href="style.css?v=20260227l">
 </head>
 <body>
   <main class="app">
@@ -94,46 +94,49 @@
           <div class="stat">Pomos: <span id="pomoPours">0</span> <button id="resetPomoPours" class="reset-pour-btn" title="Reset">↻</button></div>
           <div class="stat">Break Pomos: <span id="breakPours">0</span> <button id="resetBreakPours" class="reset-pour-btn" title="Reset">↻</button></div>
         </div>
-        <button id="pomoStatsToggle" class="timer-toggle-btn" style="margin-top:8px;">Your Pomo Stats</button>
-        <div id="pomoStatsPanel" style="display:none;margin-top:8px;">
-          <div class="completed-summary">Your Pomo Stats</div>
-          <div class="stats-subnav" style="display:flex;gap:8px;margin-top:8px">
-            <button id="statsTasksBtn" class="timer-toggle-btn">Tasks</button>
-            <button id="statsPomosBtn" class="timer-toggle-btn">Pomos</button>
-            <button id="statsTimeBtn" class="timer-toggle-btn">Time</button>
-            <button id="printSessionBtn" class="timer-toggle-btn" title="Print Session Summary">📋 Summary</button>
-          </div>
-
-          <div id="tasksSection" class="panel-small" style="margin-top:8px;display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="font-weight:600">Tasks (<span id="tasksCount">0</span>)</div>
-              <button id="resetTasksBtn" class="reset-stat-btn" title="Reset task progress">Reset</button>
-            </div>
-            <ul id="tasksPanelList" class="completed-list" style="margin-top:8px"></ul>
-          </div>
-
-          <div id="pomosSection" class="panel-small" style="margin-top:8px;display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="font-weight:600">Pomos</div>
-              <button id="resetPomosBtn" class="reset-stat-btn" title="Clear completed pomos">Reset</button>
-            </div>
-            <div class="completed-summary" style="margin-top:6px">Total Pomodoro Time: <span id="totalPomoTime">0m</span></div>
-            <ul id="completedList" class="completed-list" style="margin-top:8px"></ul>
-          </div>
-
-          <div id="timeSection" class="panel-small" style="margin-top:8px;display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="font-weight:600">Time Breakdown</div>
-              <button id="resetTimeBtn" class="reset-stat-btn" title="Clear completed pomos (resets time)">Reset</button>
-            </div>
-            <div id="timeBreakdown" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
-          </div>
-        </div>
         <div class="audio-controls-panel">
           <div class="settings">
             <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
             <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pomoStatsDock" class="pomo-stats-dock">
+      <button id="pomoStatsToggle" class="timer-toggle-btn" style="margin-top:8px;">Your Pomo Stats</button>
+      <div id="pomoStatsPanel" style="display:none;margin-top:8px;">
+        <div class="completed-summary">Your Pomo Stats</div>
+        <div class="stats-subnav" style="display:flex;gap:8px;margin-top:8px">
+          <button id="statsTasksBtn" class="timer-toggle-btn">Tasks</button>
+          <button id="statsPomosBtn" class="timer-toggle-btn">Pomos</button>
+          <button id="statsTimeBtn" class="timer-toggle-btn">Time</button>
+          <button id="printSessionBtn" class="timer-toggle-btn" title="Print Session Summary">📋 Summary</button>
+        </div>
+
+        <div id="tasksSection" class="panel-small" style="margin-top:8px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600">Tasks (<span id="tasksCount">0</span>)</div>
+            <button id="resetTasksBtn" class="reset-stat-btn" title="Reset task progress">Reset</button>
+          </div>
+          <ul id="tasksPanelList" class="completed-list" style="margin-top:8px"></ul>
+        </div>
+
+        <div id="pomosSection" class="panel-small" style="margin-top:8px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600">Pomos</div>
+            <button id="resetPomosBtn" class="reset-stat-btn" title="Clear completed pomos">Reset</button>
+          </div>
+          <div class="completed-summary" style="margin-top:6px">Total Pomodoro Time: <span id="totalPomoTime">0m</span></div>
+          <ul id="completedList" class="completed-list" style="margin-top:8px"></ul>
+        </div>
+
+        <div id="timeSection" class="panel-small" style="margin-top:8px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600">Time Breakdown</div>
+            <button id="resetTimeBtn" class="reset-stat-btn" title="Clear completed pomos (resets time)">Reset</button>
+          </div>
+          <div id="timeBreakdown" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
         </div>
       </div>
     </section>
@@ -177,6 +180,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <script src="graphics-controller.js?v=20260220p"></script>
-  <script src="app.js?v=20260227k"></script>
+  <script src="app.js?v=20260227l"></script>
 </body>
 </html>
