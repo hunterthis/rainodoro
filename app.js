@@ -252,15 +252,20 @@ function generateSessionSummary(){
 function initAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const rainHighpass = audioCtx.createBiquadFilter();
+  rainHighpass.type = 'highpass';
+  rainHighpass.frequency.value = 780;
+  rainHighpass.Q.value = 0.85;
   rainGain = audioCtx.createGain();
   rainGain.gain.value = 0.0;
-  rainGain.connect(audioCtx.destination);
+  rainGain.connect(rainHighpass);
+  rainHighpass.connect(audioCtx.destination);
 
   const layerConfigs = [
-    {duration: 1.73, level: 0.34, type: 'bandpass', freq: 900, q: 0.8},
-    {duration: 2.11, level: 0.28, type: 'bandpass', freq: 1400, q: 0.7},
-    {duration: 2.89, level: 0.22, type: 'lowpass', freq: 2400, q: 0.5},
-    {duration: 3.37, level: 0.18, type: 'highpass', freq: 450, q: 0.6}
+    {duration: 1.73, level: 0.28, type: 'bandpass', freq: 1300, q: 0.9},
+    {duration: 2.11, level: 0.24, type: 'bandpass', freq: 1800, q: 0.8},
+    {duration: 2.89, level: 0.16, type: 'bandpass', freq: 2400, q: 0.75},
+    {duration: 3.37, level: 0.12, type: 'highpass', freq: 1200, q: 0.7}
   ];
 
   rainLayers = layerConfigs.map((config)=>{
@@ -298,7 +303,7 @@ function initAudio(){
     const now = audioCtx.currentTime;
     rainLayers.forEach((layer, index)=>{
       const gainDrift = 0.82 + Math.random() * 0.36;
-      const freqDrift = 0.9 + Math.random() * 0.22;
+      const freqDrift = 0.95 + Math.random() * 0.14;
       layer.layerGain.gain.setTargetAtTime(layer.baseLevel * gainDrift, now, 0.45 + index * 0.08);
       layer.filter.frequency.setTargetAtTime(layer.baseFreq * freqDrift, now, 0.55 + index * 0.07);
     });
