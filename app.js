@@ -995,10 +995,6 @@ function onPomodoroFinished(){
       const actualDuration = timerState.pomodoro.duration;
       recordSessionEvent('pomodoro', t.title, actualDuration, null);
       saveTasks();
-      // Auto-delete the task after completion
-      tasks = tasks.filter(x=>x.id!==activeTaskId);
-      activeTaskId = null;
-      saveTasks();
       renderTasks();
     }
   }
