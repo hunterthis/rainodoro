@@ -17,6 +17,9 @@ h1{margin:0;font-size:28px}
 .focus-toggle{background:transparent;border:1px solid rgba(255,255,255,0.1)}
 .app.focus-mode .header-buttons{position:fixed;top:20px;right:20px;gap:12px;flex-direction:row;display:flex;z-index:100003}
 .app.focus-mode .header-btn{background:rgba(255,255,255,0.05);padding:10px 14px}
+.app.focus-mode #infoToggle,
+.app.focus-mode #fullscreenToggle{display:none !important}
+.app.focus-mode #focusToggle{display:inline-flex;align-items:center;justify-content:center;min-width:56px;font-weight:600;letter-spacing:0.6px;background:rgba(11,16,32,0.82);border:1px solid rgba(78,168,222,0.45)}
 .timer-toggle-btn{margin-top:8px;padding:6px 8px;border-radius:6px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%;font-size:12px}
 .info-section{margin-top:16px;padding:12px;background:rgba(78,168,222,0.05);border:1px solid rgba(78,168,222,0.1);border-radius:8px;max-width:600px;margin-left:auto;margin-right:auto}
 .info-content{color:#e6eef6;font-size:13px;line-height:1.6}
