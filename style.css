@@ -68,7 +68,9 @@ h1{margin:0;font-size:28px}
 .section-kicker{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
 .count-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-right:2px}
 .task-sheet-row{display:flex;align-items:center;gap:6px;margin-bottom:10px}
-.task-sheet-row select{flex:1;min-width:0;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#e6eef6}
+.task-sheet-row select{flex:1;min-width:0;padding:6px;border-radius:6px;border:1px solid rgba(78,168,222,0.35);background:#0f1724;color:#e6eef6;appearance:none}
+.task-sheet-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(78,168,222,0.2)}
+.task-sheet-row select option{background:#0f1724;color:#e6eef6}
 .task-sheet-row .count-btn{padding:5px 8px}
 .count-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
 .count-display{font-size:12px;color:var(--muted);min-width:20px;text-align:center}
