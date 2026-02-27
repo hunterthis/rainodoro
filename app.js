@@ -461,6 +461,14 @@ function updateFinishButtonState(){
   $finishTaskBtn.disabled = true;
 }
 
+function updatePomoStatsToggleAppearance(){
+  const statsToggle = document.getElementById('pomoStatsToggle');
+  if(!statsToggle) return;
+  const isPomodoroMode = currentMode === 'pomodoro';
+  statsToggle.classList.toggle('timer-main-btn', isPomodoroMode);
+  statsToggle.classList.toggle('timer-toggle-btn', !isPomodoroMode);
+}
+
 function setMode(newMode, options = {}){
   const {reset = false, statusText = ''} = options;
   if(!timerState[newMode]) return;
@@ -484,6 +492,7 @@ function setMode(newMode, options = {}){
   updateActiveTaskDisplay();
   updateFinishButtonLabel();
   updateFinishButtonState();
+  updatePomoStatsToggleAppearance();
   saveTimerState();
 }
 
@@ -1425,6 +1434,7 @@ makeRain();
 disableRainAnimation();
 // ensure forms match the loaded mode on startup
 updateFormsVisibility();
+updatePomoStatsToggleAppearance();
 updateFinishButtonLabel();
 updateFinishButtonState();
 window.addEventListener('beforeunload', saveTimerState);
