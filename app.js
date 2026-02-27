@@ -837,8 +837,6 @@ function deleteTask(id){
   const activeTasks = getActiveTasks();
   const t = activeTasks.find(x=>x.id===id);
   if(!t) return;
-  const confirmed = confirm(`Delete task "${t.title}"? It will be removed, but the completed count will be preserved.`);
-  if(!confirmed) return;
   setActiveTasks(activeTasks.filter(x=>x.id!==id));
   if(activeTaskId===id) activeTaskId=null;
   syncActiveTaskToSheet();
