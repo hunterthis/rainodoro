@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Rainodoro</title>
-  <link rel="stylesheet" href="style.css?v=20260227c">
+  <link rel="stylesheet" href="style.css?v=20260227d">
 </head>
 <body>
   <main class="app">
@@ -26,19 +26,21 @@
 
     <aside class="sidebar">
       <div id="sidebarTasks" class="section">
-        <div class="section-header">
-          <h3>Tasks</h3>
-          <div class="section-controls">
-            <button id="pomoDec" class="count-btn">−</button>
-            <span id="pomoCount" class="count-display">0</span>
-            <button id="pomoInc" class="count-btn">+</button>
-          </div>
-        </div>
+        <div class="section-kicker">Task Sheet</div>
         <div class="task-sheet-row">
           <select id="taskSheetSelect" aria-label="Task Sheet"></select>
           <button id="addTaskSheetBtn" type="button" class="count-btn" title="Create sheet">＋</button>
           <button id="renameTaskSheetBtn" type="button" class="count-btn" title="Rename sheet">✎</button>
           <button id="deleteTaskSheetBtn" type="button" class="count-btn" title="Delete sheet">🗑</button>
+        </div>
+        <div class="section-header">
+          <h3>Tasks</h3>
+          <div class="section-controls">
+            <span class="count-label">Pomos</span>
+            <button id="pomoDec" class="count-btn">−</button>
+            <span id="pomoCount" class="count-display">0</span>
+            <button id="pomoInc" class="count-btn">+</button>
+          </div>
         </div>
         <form id="taskForm" style="display:flex;gap:6px;margin-bottom:10px">
           <input id="taskTitle" placeholder="New task title" required style="flex:1" />
