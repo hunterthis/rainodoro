@@ -173,7 +173,11 @@ function archiveFinishedTask(task, sheetName){
 }
 
 // WebAudio rain noise
-let audioCtx, rainGain, rainSource;
+let audioCtx, rainGain;
+let rainLayers = [];
+let rainTargetScale = 0;
+let rainCurrentScale = 0;
+let rainGainLoopId = null;
 let masterVolume = 0.18;
 let breakPlusTenActivated = false;
 let sessionStart = Date.now();
@@ -248,19 +252,74 @@ function generateSessionSummary(){
 function initAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const bufferSize = audioCtx.sampleRate * 2;
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1)*0.5;
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = buffer; noise.loop = true;
-  const band = audioCtx.createBiquadFilter();
-  band.type = 'bandpass'; band.frequency.value = 1000; band.Q.value = 0.6;
-  rainGain = audioCtx.createGain(); rainGain.gain.value = 0.0;
-  noise.connect(band); band.connect(rainGain); rainGain.connect(audioCtx.destination);
-  rainSource = noise; noise.start();
+  rainGain = audioCtx.createGain();
+  rainGain.gain.value = 0.0;
+  rainGain.connect(audioCtx.destination);
+
+  const layerConfigs = [
+    {duration: 1.73, level: 0.34, type: 'bandpass', freq: 900, q: 0.8},
+    {duration: 2.11, level: 0.28, type: 'bandpass', freq: 1400, q: 0.7},
+    {duration: 2.89, level: 0.22, type: 'lowpass', freq: 2400, q: 0.5},
+    {duration: 3.37, level: 0.18, type: 'highpass', freq: 450, q: 0.6}
+  ];
+
+  rainLayers = layerConfigs.map((config)=>{
+    const bufferSize = Math.floor(audioCtx.sampleRate * config.duration);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      const white = (Math.random() * 2 - 1);
+      const pinkish = i > 0 ? data[i - 1] * 0.985 + white * 0.15 : white * 0.15;
+      data[i] = Math.max(-1, Math.min(1, pinkish));
+    }
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = config.type;
+    filter.frequency.value = config.freq;
+    filter.Q.value = config.q;
+
+    const layerGain = audioCtx.createGain();
+    layerGain.gain.value = config.level;
+
+    source.connect(filter);
+    filter.connect(layerGain);
+    layerGain.connect(rainGain);
+    source.start();
+
+    return {source, filter, layerGain, baseLevel: config.level, baseFreq: config.freq};
+  });
+
+  const modulate = ()=>{
+    if(!audioCtx) return;
+    const now = audioCtx.currentTime;
+    rainLayers.forEach((layer, index)=>{
+      const gainDrift = 0.82 + Math.random() * 0.36;
+      const freqDrift = 0.9 + Math.random() * 0.22;
+      layer.layerGain.gain.setTargetAtTime(layer.baseLevel * gainDrift, now, 0.45 + index * 0.08);
+      layer.filter.frequency.setTargetAtTime(layer.baseFreq * freqDrift, now, 0.55 + index * 0.07);
+    });
+    const nextDelay = 700 + Math.random() * 900;
+    setTimeout(modulate, nextDelay);
+  };
+  modulate();
+
+  const gainLoop = ()=>{
+    if(!audioCtx || !rainGain) return;
+    rainCurrentScale += (rainTargetScale - rainCurrentScale) * 0.08;
+    const nextVolume = Math.max(0, Math.min(1, rainCurrentScale)) * masterVolume;
+    rainGain.gain.setTargetAtTime(nextVolume, audioCtx.currentTime, 0.09);
+    rainGainLoopId = requestAnimationFrame(gainLoop);
+  };
+  if(!rainGainLoopId) rainGainLoopId = requestAnimationFrame(gainLoop);
 }
-function setRainVolume(scale){ if(!rainGain || !audioCtx) return; const v = (scale||0) * masterVolume; rainGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); }
+function setRainVolume(scale){
+  if(!audioCtx) return;
+  rainTargetScale = Math.max(0, Math.min(1, scale || 0));
+}
 
 // Water animation effects - particles placed in rain-overlay to avoid water overflow clipping
 function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 24 + 12; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); setTimeout(() => ripple.remove(), 800); }
