@@ -436,8 +436,8 @@ function showToast(message){
 function updateFinishButtonLabel(){
   if(!$finishTaskBtn) return;
   if(currentMode === 'pomodoro'){
-    $finishTaskBtn.textContent = 'Finished Task';
-    $finishTaskBtn.title = 'Finish Pomodoro Task';
+    $finishTaskBtn.textContent = 'Finished Pomo';
+    $finishTaskBtn.title = 'Finish Pomodoro';
   } else {
     $finishTaskBtn.textContent = 'Finished Break';
     $finishTaskBtn.title = 'Finish Break Item';
@@ -1006,22 +1006,23 @@ function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short'
 function selectTask(id){ activeTaskId = id; syncActiveTaskToSheet(); saveTasks(); renderTasks(); updateActiveTaskDisplay(); }
 function updateActiveTaskDisplay(){ 
   if(currentMode === 'pomodoro'){
-    if(!activeTaskId){ $activeTaskDisplay.textContent='No task selected'; return } 
+    if(!activeTaskId){ $activeTaskDisplay.textContent='No task selected'; updateFinishButtonState(); renderBudgets(); return } 
     const t = getActiveTasks().find(x=>x.id===activeTaskId); 
-    if(!t){ $activeTaskDisplay.textContent='No task selected'; return } 
+    if(!t){ $activeTaskDisplay.textContent='No task selected'; updateFinishButtonState(); renderBudgets(); return } 
     $activeTaskDisplay.textContent = t.title
   } else if(currentMode === 'short'){
-    if(!activeShortBreakId){ $activeTaskDisplay.textContent='No item selected'; return }
+    if(!activeShortBreakId){ $activeTaskDisplay.textContent='No item selected'; updateFinishButtonState(); renderBudgets(); return }
     const it = breaks.short.find(x=>x.id===activeShortBreakId);
-    if(!it){ $activeTaskDisplay.textContent='No item selected'; return }
+    if(!it){ $activeTaskDisplay.textContent='No item selected'; updateFinishButtonState(); renderBudgets(); return }
     $activeTaskDisplay.textContent = it.text;
   } else if(currentMode === 'long'){
-    if(!activeLongBreakId){ $activeTaskDisplay.textContent='No item selected'; return }
+    if(!activeLongBreakId){ $activeTaskDisplay.textContent='No item selected'; updateFinishButtonState(); renderBudgets(); return }
     const it = breaks.long.find(x=>x.id===activeLongBreakId);
-    if(!it){ $activeTaskDisplay.textContent='No item selected'; return }
+    if(!it){ $activeTaskDisplay.textContent='No item selected'; updateFinishButtonState(); renderBudgets(); return }
     $activeTaskDisplay.textContent = it.text;
   }
   updateFinishButtonState();
+  renderBudgets();
 }
 
 function loadBreaks(){ try{ const raw=localStorage.getItem(BREAKS_KEY); breaks = raw ? JSON.parse(raw) : {short:[], long:[]}; }catch(e){ breaks={short:[], long:[]} } renderBreaks(); }
@@ -1220,9 +1221,14 @@ function loadBudgets(){ try{ const raw=localStorage.getItem(BUDGETS_KEY); budget
 function saveBudgets(){ localStorage.setItem(BUDGETS_KEY, JSON.stringify(budgets)); }
 function renderBudgets(){ 
   const $pomoCount = document.getElementById('pomoCount');
+  const $pomoDec = document.getElementById('pomoDec');
+  const $pomoInc = document.getElementById('pomoInc');
   const $shortCount = document.getElementById('shortCount');
   const $longCount = document.getElementById('longCount');
-  if($pomoCount) $pomoCount.textContent = budgets.pomodoro;
+  const activeTask = activeTaskId ? getActiveTasks().find(t => t.id === activeTaskId) : null;
+  if($pomoCount) $pomoCount.textContent = activeTask ? String(activeTask.target || 1) : '0';
+  if($pomoDec) $pomoDec.disabled = !activeTask;
+  if($pomoInc) $pomoInc.disabled = !activeTask;
   if($shortCount) $shortCount.textContent = budgets.short;
   if($longCount) $longCount.textContent = budgets.long;
 }
@@ -1290,8 +1296,8 @@ const $shortDec = document.getElementById('shortDec');
 const $shortInc = document.getElementById('shortInc');
 const $longDec = document.getElementById('longDec');
 const $longInc = document.getElementById('longInc');
-if($pomoDec) $pomoDec.addEventListener('click', ()=>{ budgets.pomodoro = Math.max(0, budgets.pomodoro-1); saveBudgets(); renderBudgets(); });
-if($pomoInc) $pomoInc.addEventListener('click', ()=>{ budgets.pomodoro++; saveBudgets(); renderBudgets(); });
+if($pomoDec) $pomoDec.addEventListener('click', ()=>{ if(!activeTaskId) return; changeTarget(activeTaskId, -1); renderBudgets(); });
+if($pomoInc) $pomoInc.addEventListener('click', ()=>{ if(!activeTaskId) return; changeTarget(activeTaskId, 1); renderBudgets(); });
 if($shortDec) $shortDec.addEventListener('click', ()=>{ budgets.short = Math.max(0, budgets.short-1); saveBudgets(); renderBudgets(); });
 if($shortInc) $shortInc.addEventListener('click', ()=>{ budgets.short++; saveBudgets(); renderBudgets(); });
 if($longDec) $longDec.addEventListener('click', ()=>{ budgets.long = Math.max(0, budgets.long-1); saveBudgets(); renderBudgets(); });
