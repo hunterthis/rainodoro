@@ -21,6 +21,8 @@ h1{margin:0;font-size:28px}
 .app.focus-mode #fullscreenToggle{display:none !important}
 .app.focus-mode #focusToggle{display:inline-flex;align-items:center;justify-content:center;min-width:56px;font-weight:600;letter-spacing:0.6px;background:rgba(11,16,32,0.82);border:1px solid rgba(78,168,222,0.45)}
 .timer-toggle-btn{margin-top:8px;padding:6px 8px;border-radius:6px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%;font-size:12px}
+.timer-main-btn{margin-top:8px;padding:8px 10px;border-radius:8px;border:none;background:#17324b;color:#e6f0fb;cursor:pointer;width:100%;font-size:14px}
+.timer-main-btn:disabled{background:#0a1020;color:#4a5a6a;cursor:not-allowed;opacity:0.5}
 .info-section{margin-top:16px;padding:12px;background:rgba(78,168,222,0.05);border:1px solid rgba(78,168,222,0.1);border-radius:8px;max-width:600px;margin-left:auto;margin-right:auto}
 .info-content{color:#e6eef6;font-size:13px;line-height:1.6}
 .info-content h2{margin:0 0 10px 0;font-size:16px;color:var(--accent)}
@@ -67,6 +69,7 @@ h1{margin:0;font-size:28px}
 .app.focus-mode #pomoStatsPanel{width:min(100%,260px)}
 .app.focus-mode .stats-subnav{display:flex !important;flex-direction:column;gap:8px;margin-top:8px !important;width:100%}
 .app.focus-mode .stats-subnav .timer-toggle-btn{width:100%;margin-top:0}
+.app.focus-mode .stats-subnav .timer-main-btn{width:100%;margin-top:0}
 .app.focus-mode .audio-controls-panel{justify-content:center}
 .app.focus-mode .audio-controls-panel .settings{justify-content:center;width:min(100%,260px)}
 .sidebar{grid-area:sidebar;position:relative;width:100%;margin:0;padding:0 0 0 24px;border-left:1px solid rgba(78,168,222,0.1);background:transparent;display:flex;flex-direction:column;gap:16px;max-height:none;overflow:visible}
