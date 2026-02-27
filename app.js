@@ -398,11 +398,22 @@ function setMode(newMode, options = {}){
   saveTimerState();
 }
 
+function getCurrentModeReadyStatus(){
+  if(currentMode === 'pomodoro') return 'Pomodoro (ready)';
+  if(currentMode === 'short') return 'Break (ready)';
+  if(currentMode === 'long') return 'Long break (ready)';
+  return 'Ready';
+}
+
+function resetCurrentModeAfterCompletion(){
+  stopTimer();
+  $status.textContent = getCurrentModeReadyStatus();
+}
+
 function handlePomodoroCompletion(){
   onPomodoroFinished();
   showToast('Pomodoro finished.');
-  $status.textContent = 'Finished';
-  saveTimerState();
+  resetCurrentModeAfterCompletion();
 }
 
 function onBreakFinished(){
@@ -445,8 +456,7 @@ function finishCurrentItem(){
   if(currentMode === 'short' || currentMode === 'long'){
     onBreakFinished();
     showToast('Break finished.');
-    $status.textContent = 'Finished';
-    saveTimerState();
+    resetCurrentModeAfterCompletion();
   }
 }
 
@@ -1271,8 +1281,9 @@ function tick(){
     if(currentMode==='pomodoro'){
       handlePomodoroCompletion();
     } else {
-      $status.textContent='Finished';
-      saveTimerState();
+      onBreakFinished();
+      showToast('Break finished.');
+      resetCurrentModeAfterCompletion();
     }
     return;
   }
