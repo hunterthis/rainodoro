@@ -591,7 +591,7 @@ function renderTasks(){
   renderPomoStatsPanel();
 }
 
-function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.push(t); saveTasks(); renderTasks(); }
+function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.unshift(t); saveTasks(); renderTasks(); }
 function deleteTask(id){
   const t = tasks.find(x=>x.id===id);
   if(!t) return;
