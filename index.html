@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Rainodoro</title>
-  <link rel="stylesheet" href="style.css?v=20260220p">
+  <link rel="stylesheet" href="style.css?v=20260227b">
 </head>
 <body>
   <main class="app">
@@ -12,6 +12,7 @@
       <h1 id="mainTitle">Rainodoro</h1>
       <div class="header-buttons">
         <button id="infoToggle" class="header-btn" title="About Rainodoro">ℹ</button>
+        <button id="fullscreenToggle" class="header-btn" title="Fullscreen Bucket Mode">⛶</button>
         <button id="focusToggle" class="focus-toggle header-btn" title="Ultra Focus Mode">Ultra Focus Mode</button>
       </div>
     </header>
@@ -20,11 +21,6 @@
       <div class="modes">
         <button data-mode="pomodoro" class="mode active">Pomodoro</button>
         <button data-mode="short" class="mode">Break</button>
-      </div>
-
-      <div class="settings">
-        <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
-        <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
       </div>
     </section>
 
@@ -38,11 +34,18 @@
             <button id="pomoInc" class="count-btn">+</button>
           </div>
         </div>
+        <div class="task-sheet-row">
+          <select id="taskSheetSelect" aria-label="Task Sheet"></select>
+          <button id="addTaskSheetBtn" type="button" class="count-btn" title="Create sheet">＋</button>
+          <button id="renameTaskSheetBtn" type="button" class="count-btn" title="Rename sheet">✎</button>
+          <button id="deleteTaskSheetBtn" type="button" class="count-btn" title="Delete sheet">🗑</button>
+        </div>
         <form id="taskForm" style="display:flex;gap:6px;margin-bottom:10px">
           <input id="taskTitle" placeholder="New task title" required style="flex:1" />
           <button type="submit" class="timer-toggle-btn">Add</button>
-          <button id="deleteTaskBtn" type="button" class="timer-toggle-btn" style="background:#e74c3c;display:none">Delete</button>
+          <button id="editModeBtn" type="button" class="timer-toggle-btn">Edit</button>
         </form>
+        <div id="taskTitleWarning" class="input-warning" style="display:none">Task title is over 50 characters. Please shorten it.</div>
         <div id="taskList" class="task-grid"></div>
       </div>
 
@@ -55,8 +58,8 @@
             <button id="shortInc" class="count-btn">+</button>
           </div>
         </div>
-        <form id="shortBreakForm"><input id="shortBreakInput" placeholder="Add break item" /><button type="submit">Add</button></form>
-        <ul id="shortBreakList" class="break-list"></ul>
+        <form id="shortBreakForm" style="display:flex;gap:6px;margin-bottom:10px"><input id="shortBreakInput" placeholder="Add break item" style="flex:1" /><button type="submit" class="timer-toggle-btn">Add</button><button id="editModeBtnBreak" type="button" class="timer-toggle-btn">Edit</button></form>
+        <div id="shortBreakList" class="task-grid"></div>
       </div>
     </aside>
 
@@ -75,11 +78,13 @@
             <button id="start">Start</button>
             <button id="pause" disabled>Pause</button>
             <button id="reset">Reset</button>
-            <button id="breakPlusTenBtn">+10 Min Break</button>
             <button id="pourBtn" disabled title="Fill the bucket to pour">Pour</button>
           </div>
           <button id="timerToggle" class="timer-toggle-btn" title="Hide the Timer">Hide the Timer</button>
           <button id="finishTaskBtn" class="timer-toggle-btn" title="Finish Pomodoro Task">Finished Task</button>
+          <div id="breakPlusTenRow" class="break-plus-ten-row">
+            <button id="breakPlusTenBtn" class="timer-toggle-btn">+10 Min Break</button>
+          </div>
         </div>
         <p class="status" id="status">Ready</p>
         <div class="active-task" id="activeTaskDisplay">No task selected</div>
@@ -122,6 +127,12 @@
             <div id="timeBreakdown" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
           </div>
         </div>
+        <div class="audio-controls-panel">
+          <div class="settings">
+            <label>Volume: <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.18"></label>
+            <button id="muteBtn" class="mute-btn" title="Toggle Mute">🔊 Mute</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -153,9 +164,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Fullscreen Immersive Mode -->
+    <div id="immersive-host" class="immersive-hidden">
+      <canvas id="immersive-canvas"></canvas>
+      <div id="immersive-timer-overlay" class="immersive-timer-display"></div>
+      <button id="immersive-exit-btn" class="immersive-exit-btn" title="Exit fullscreen">✕</button>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <script src="app.js?v=20260227c"></script>
+  <script src="graphics-controller.js?v=20260220p"></script>
+  <script src="app.js?v=20260227d"></script>
 </body>
 </html>

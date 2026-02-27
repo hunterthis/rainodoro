@@ -11,6 +11,14 @@ let remaining = timerState[currentMode].remaining;
 let timerId = null;
 let isRunning = false;
 
+// Expose timer variables directly on window for live access
+window.pomodoroTimer = {
+  get remaining() { return remaining; },
+  get duration() { return duration; },
+  get isRunning() { return isRunning; },
+  get currentMode() { return currentMode; }
+};
+
 const $time = document.getElementById('time');
 const $start = document.getElementById('start');
 const $pause = document.getElementById('pause');
@@ -19,7 +27,12 @@ const $water = document.getElementById('water');
 const $status = document.getElementById('status');
 const $taskForm = document.getElementById('taskForm');
 const $taskTitle = document.getElementById('taskTitle');
+const $taskTitleWarning = document.getElementById('taskTitleWarning');
 const $taskList = document.getElementById('taskList');
+const $taskSheetSelect = document.getElementById('taskSheetSelect');
+const $addTaskSheetBtn = document.getElementById('addTaskSheetBtn');
+const $renameTaskSheetBtn = document.getElementById('renameTaskSheetBtn');
+const $deleteTaskSheetBtn = document.getElementById('deleteTaskSheetBtn');
 const $activeTaskDisplay = document.getElementById('activeTaskDisplay');
 const $shortBreakForm = document.getElementById('shortBreakForm');
 const $shortBreakInput = document.getElementById('shortBreakInput');
@@ -28,15 +41,19 @@ const $longBreakForm = document.getElementById('longBreakForm');
 const $longBreakInput = document.getElementById('longBreakInput');
 const $longBreakList = document.getElementById('longBreakList');
 const $breakPlusTenBtn = document.getElementById('breakPlusTenBtn');
+const $breakPlusTenRow = document.getElementById('breakPlusTenRow');
 const $focusToggle = document.getElementById('focusToggle');
 const $finishTaskBtn = document.getElementById('finishTaskBtn');
 
 let focusMode = false;
 let timerVisible = true;
+let cardEditMode = false;
+window.timerVisible = timerVisible;
 let toastHideTimer = null;
 
 // data
-let tasks = [];
+let taskSheets = [];
+let activeTaskSheetId = null;
 let activeTaskId = null;
 let breaks = {short: [], long: []};
 let activeShortBreakId = null;
@@ -51,6 +68,84 @@ const POURS_KEY = 'rainodoro_pours_v1';
 const TIMER_STATE_KEY = 'rainodoro_timer_v1';
 const BREAK_PLUS_TEN_KEY = 'rainodoro_break_plus_ten_v1';
 const SESSION_HISTORY_KEY = 'rainodoro_session_history_v1';
+const TASK_SHEETS_VERSION = 2;
+const TASK_SHEETS_LIMIT = 20;
+
+function makeTaskSheetId(){
+  return `sheet_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+}
+function normalizeTask(task){
+  return {
+    id: task.id || Date.now().toString(),
+    title: task.title || 'Untitled Task',
+    target: Math.max(1, Number(task.target || 1)),
+    completed: Math.max(0, Number(task.completed || 0))
+  };
+}
+function normalizeSheet(sheet, fallbackName){
+  const tasks = Array.isArray(sheet.tasks) ? sheet.tasks.map(normalizeTask) : [];
+  return {
+    id: sheet.id || makeTaskSheetId(),
+    name: (sheet.name || fallbackName || 'Sheet').trim() || 'Sheet',
+    tasks,
+    activeTaskId: sheet.activeTaskId || null
+  };
+}
+function createTaskSheet(name){
+  return {
+    id: makeTaskSheetId(),
+    name,
+    tasks: [],
+    activeTaskId: null
+  };
+}
+function getTaskSheetById(sheetId){
+  return taskSheets.find(sheet => sheet.id === sheetId) || null;
+}
+function getActiveTaskSheet(){
+  return getTaskSheetById(activeTaskSheetId);
+}
+function getActiveTasks(){
+  const sheet = getActiveTaskSheet();
+  return sheet ? sheet.tasks : [];
+}
+function setActiveTasks(nextTasks){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  sheet.tasks = nextTasks;
+}
+function getAllTasks(){
+  return taskSheets.flatMap(sheet => Array.isArray(sheet.tasks) ? sheet.tasks : []);
+}
+function syncActiveTaskFromSheet(){
+  const sheet = getActiveTaskSheet();
+  activeTaskId = sheet ? sheet.activeTaskId || null : null;
+}
+function syncActiveTaskToSheet(){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  sheet.activeTaskId = activeTaskId || null;
+}
+function getNextSheetName(){
+  for(let index = 1; index <= TASK_SHEETS_LIMIT; index++){
+    const candidate = `Sheet ${index}`;
+    const exists = taskSheets.some(sheet => sheet.name === candidate);
+    if(!exists) return candidate;
+  }
+  return `Sheet ${taskSheets.length + 1}`;
+}
+function ensureTaskSheets(){
+  if(taskSheets.length === 0){
+    taskSheets = [createTaskSheet('Sheet 1')];
+    activeTaskSheetId = taskSheets[0].id;
+    activeTaskId = null;
+    return;
+  }
+  if(!activeTaskSheetId || !getTaskSheetById(activeTaskSheetId)){
+    activeTaskSheetId = taskSheets[0].id;
+  }
+  syncActiveTaskFromSheet();
+}
 
 // WebAudio rain noise
 let audioCtx, rainGain, rainSource;
@@ -143,16 +238,31 @@ function initAudio(){
 function setRainVolume(scale){ if(!rainGain || !audioCtx) return; const v = (scale||0) * masterVolume; rainGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); }
 
 // Water animation effects - particles placed in rain-overlay to avoid water overflow clipping
-function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found'); return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 24 + 12; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); console.log('Ripple created at', size + 'px'); setTimeout(() => ripple.remove(), 800); }
+function createRipple(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { return; } const ripple = document.createElement('div'); ripple.className = 'ripple'; const size = Math.random() * 24 + 12; const left = Math.random() * 100; const top = Math.random() * 60 + 20; ripple.style.width = size + 'px'; ripple.style.height = size + 'px'; ripple.style.left = left + '%'; ripple.style.top = top + '%'; ripple.style.animation = 'ripple 0.8s ease-out forwards'; overlay.appendChild(ripple); setTimeout(() => ripple.remove(), 800); }
 
-function createBubble(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { console.log('Rain overlay not found for bubble'); return; } const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 4 + 2.5; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '8%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; overlay.appendChild(bubble); console.log('Bubble created at', size + 'px'); setTimeout(() => bubble.remove(), 2000); }
+function createBubble(){ const overlay = document.getElementById('rainOverlay'); if(!overlay) { return; } const bubble = document.createElement('div'); bubble.className = 'bubble'; const size = Math.random() * 4 + 2.5; const left = Math.random() * 90 + 5; bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; bubble.style.left = left + '%'; bubble.style.bottom = '8%'; bubble.style.animation = `bubble-rise ${Math.random() * 1 + 1}s ease-in forwards`; overlay.appendChild(bubble); setTimeout(() => bubble.remove(), 2000); }
 
 // Pour sound using WebAudio
 function playPourSound(){ if(!audioCtx) initAudio(); const ctx = audioCtx; const now = ctx.currentTime; const osc = ctx.createOscillator(); const gain = ctx.createGain(); const filter = ctx.createBiquadFilter(); osc.frequency.setValueAtTime(150,now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); filter.type='lowpass'; filter.frequency.value=800; osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.3); osc.start(now); osc.stop(now+0.3); }
 
 function formatTime(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${ss.toString().padStart(2,'0')}` }
 let previousWaterHeight = 0;
-function updateDisplay(){ $time.textContent = formatTime(remaining); const pct = 100*(1 - remaining/duration); $water.style.height = pct + '%';
+function updateDisplay(){ 
+  $time.textContent = formatTime(remaining);
+  
+  // Update immersive timer overlay to match main timer
+  const immersiveTimer = document.getElementById('immersive-timer-overlay');
+  if(immersiveTimer) {
+    if(window.timerVisible !== false) {
+      immersiveTimer.style.display = 'block';
+      immersiveTimer.textContent = formatTime(remaining);
+    } else {
+      immersiveTimer.style.display = 'none';
+    }
+  }
+  
+  const pct = 100*(1 - remaining/duration); 
+  $water.style.height = pct + '%';
   // create ripple when water level changes
   if(isRunning && Math.abs(pct - previousWaterHeight) > 0.2){ createRipple(); }
   // create bubbles as water fills (much more frequently for visibility)
@@ -165,15 +275,38 @@ function updateDisplay(){ $time.textContent = formatTime(remaining); const pct =
   if(isRunning && audioCtx && rainGain && !isMuted){ const fillFactor = Math.max(0, Math.min(1, pct/100)); const scaled = 0.15 + 0.85 * fillFactor; setRainVolume(scaled); } else { setRainVolume(0); }
 }
 
-function tick(){ if(remaining<=0){ stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } remaining--; updateDisplay(); saveTimerState(); }
+function dispatchTimerTick(){
+  const pct = Math.max(0, (duration - remaining) / duration);
+  const tickEvent = new CustomEvent('timer-tick', {
+    detail: {
+      remaining: remaining,
+      total: duration,
+      percentage: pct,
+      mode: currentMode
+    }
+  });
+  document.dispatchEvent(tickEvent);
+}
 
-function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; timerId = setInterval(tick,1000); $start.disabled=true; $pause.disabled=false; $status.textContent='Running'; enableRainAnimation(); }
-function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); }
-function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); }
+function tick(){ 
+  if(remaining<=0){ document.dispatchEvent(new Event('timer-finished')); stopTimer(); $status.textContent='Finished'; setRainVolume(0); return; } 
+  remaining--; 
+  window.timerState = { remaining, duration, currentMode, isRunning };
+  updateDisplay(); 
+  saveTimerState(); 
+  dispatchTimerTick(); 
+}
+
+function startTimer(){ if(isRunning) return; initAudio(); isRunning=true; window.timerState = { remaining, duration, currentMode, isRunning }; timerId = setInterval(tick,1000); $start.disabled=true; $pause.disabled=false; $status.textContent='Running'; enableRainAnimation(); document.dispatchEvent(new Event('timer-started')); dispatchTimerTick(); }
+function pauseTimer(){ if(!isRunning) return; clearInterval(timerId); isRunning=false; window.timerState = { remaining, duration, currentMode, isRunning }; $start.disabled=false; $pause.disabled=true; if(audioCtx) setRainVolume(0); $status.textContent='Paused'; disableRainAnimation(); saveTimerState(); document.dispatchEvent(new Event('timer-paused')); dispatchTimerTick(); }
+function stopTimer(){ clearInterval(timerId); isRunning=false; remaining=duration; window.timerState = { remaining, duration, currentMode, isRunning }; updateDisplay(); $start.disabled=false; $pause.disabled=true; setRainVolume(0); disableRainAnimation(); saveTimerState(); document.dispatchEvent(new Event('timer-stopped')); dispatchTimerTick(); }
 
 function updateBreakPlusTenButton(){
   if(!$breakPlusTenBtn) return;
-  $breakPlusTenBtn.style.display = currentMode === 'short' ? 'block' : 'none';
+  const showRow = currentMode === 'short';
+  if($breakPlusTenRow){
+    $breakPlusTenRow.classList.toggle('visible', showRow);
+  }
   if(breakPlusTenActivated){
     $breakPlusTenBtn.disabled = true;
     $breakPlusTenBtn.textContent = '+10 Min (Used)';
@@ -188,6 +321,7 @@ function addTenMinutesToBreak(){
   duration += 10 * 60;
   timerState.short.duration = duration;
   timerState.short.remaining = remaining;
+  window.timerState = { remaining, duration, currentMode, isRunning };
   breakPlusTenActivated = true;
   updateBreakPlusTenButton();
   updateDisplay();
@@ -248,10 +382,12 @@ function setMode(newMode, options = {}){
   const state = timerState[currentMode];
   duration = state.duration;
   remaining = state.remaining;
+  window.timerState = { remaining, duration, currentMode, isRunning };
   document.querySelectorAll('.mode').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.mode === currentMode);
   });
   updateDisplay();
+  dispatchTimerTick();
   $status.textContent = statusText || (currentMode.charAt(0).toUpperCase()+currentMode.slice(1) + ' (paused)');
   updateFormsVisibility();
   breakPlusTenActivated = false;
@@ -293,6 +429,7 @@ function onBreakFinished(){
 function finishCurrentItem(){
   if(isRunning){ clearInterval(timerId); isRunning=false; }
   remaining = 0;
+  window.timerState = { remaining, duration, currentMode, isRunning };
   updateDisplay();
   const pourBtn = document.getElementById('pourBtn');
   if(pourBtn) pourBtn.disabled = false;
@@ -321,6 +458,7 @@ if($pourBtn){ $pourBtn.addEventListener('click', ()=>{
   setTimeout(()=>{ 
     $water.style.transition = 'height 0.4s linear'; 
     remaining = duration; 
+    window.timerState = { remaining, duration, currentMode, isRunning };
     updateDisplay(); 
     $status.textContent='Poured'; 
     setRainVolume(0); 
@@ -368,8 +506,117 @@ function loadTimerState(){
 }
 
 // Task & break persistence and UI
-function loadTasks(){ try{ const raw = localStorage.getItem(TASKS_KEY); tasks = raw ? JSON.parse(raw) : []; activeTaskId = tasks.find(t=>t.isActive)?.id || null; }catch(e){ tasks=[] } renderTasks(); }
-function saveTasks(){ localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
+function loadTasks(){
+  try{
+    const raw = localStorage.getItem(TASKS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if(Array.isArray(parsed)){
+      const legacyActiveId = parsed.find(task=>task && task.isActive)?.id || null;
+      const legacyTasks = parsed.map(normalizeTask);
+      const sheet = createTaskSheet('Sheet 1');
+      sheet.tasks = legacyTasks;
+      sheet.activeTaskId = legacyActiveId;
+      taskSheets = [sheet];
+      activeTaskSheetId = sheet.id;
+    } else if(parsed && Array.isArray(parsed.sheets)){
+      taskSheets = parsed.sheets.map((sheet, index)=>normalizeSheet(sheet, `Sheet ${index + 1}`));
+      activeTaskSheetId = parsed.activeTaskSheetId || taskSheets[0]?.id || null;
+    } else {
+      taskSheets = [];
+      activeTaskSheetId = null;
+    }
+  }catch(e){
+    taskSheets = [];
+    activeTaskSheetId = null;
+  }
+  ensureTaskSheets();
+  renderTaskSheets();
+  renderTasks();
+}
+function saveTasks(){
+  const payload = {
+    version: TASK_SHEETS_VERSION,
+    activeTaskSheetId,
+    sheets: taskSheets
+  };
+  localStorage.setItem(TASKS_KEY, JSON.stringify(payload));
+}
+function renderTaskSheets(){
+  if(!$taskSheetSelect) return;
+  $taskSheetSelect.innerHTML = '';
+  taskSheets.forEach((sheet, index)=>{
+    const option = document.createElement('option');
+    option.value = sheet.id;
+    option.textContent = sheet.name || `Sheet ${index + 1}`;
+    $taskSheetSelect.appendChild(option);
+  });
+  if(activeTaskSheetId){
+    $taskSheetSelect.value = activeTaskSheetId;
+  }
+  const canMutate = taskSheets.length > 0;
+  if($renameTaskSheetBtn) $renameTaskSheetBtn.disabled = !canMutate;
+  if($deleteTaskSheetBtn) $deleteTaskSheetBtn.disabled = !canMutate;
+}
+function setActiveTaskSheet(sheetId){
+  const sheet = getTaskSheetById(sheetId);
+  if(!sheet) return;
+  activeTaskSheetId = sheet.id;
+  syncActiveTaskFromSheet();
+  renderTaskSheets();
+  renderTasks();
+  saveTasks();
+}
+function createTaskSheetPrompt(){
+  if(taskSheets.length >= TASK_SHEETS_LIMIT){
+    alert(`You can only have up to ${TASK_SHEETS_LIMIT} sheets.`);
+    return;
+  }
+  const defaultName = getNextSheetName();
+  const nameInput = prompt('New sheet name:', defaultName);
+  if(nameInput === null) return;
+  const name = nameInput.trim() || defaultName;
+  const sheet = createTaskSheet(name);
+  taskSheets.push(sheet);
+  setActiveTaskSheet(sheet.id);
+  saveTasks();
+}
+function renameTaskSheetPrompt(){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  const nameInput = prompt('Rename sheet:', sheet.name);
+  if(nameInput === null) return;
+  const name = nameInput.trim();
+  if(!name) return;
+  sheet.name = name;
+  renderTaskSheets();
+  saveTasks();
+}
+function deleteTaskSheetPrompt(){
+  const sheet = getActiveTaskSheet();
+  if(!sheet) return;
+  const sheetTasks = Array.isArray(sheet.tasks) ? sheet.tasks : [];
+  const confirmed = confirm(`Delete sheet "${sheet.name}"? Tasks in this sheet will be moved to a different sheet.`);
+  if(!confirmed) return;
+  if(taskSheets.length <= 1){
+    taskSheets = [createTaskSheet('Sheet 1')];
+    activeTaskSheetId = taskSheets[0].id;
+    activeTaskId = null;
+    saveTasks();
+    renderTaskSheets();
+    renderTasks();
+    return;
+  }
+  const destination = taskSheets.find(s=>s.id !== sheet.id) || null;
+  taskSheets = taskSheets.filter(s=>s.id !== sheet.id);
+  if(destination){
+    destination.tasks = [...sheetTasks, ...destination.tasks];
+  }
+  activeTaskSheetId = destination ? destination.id : taskSheets[0].id;
+  syncActiveTaskFromSheet();
+  saveTasks();
+  renderTaskSheets();
+  renderTasks();
+}
 function hasSortable(){ return typeof Sortable !== 'undefined'; }
 function isTouchDevice(){
   return window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -382,13 +629,12 @@ function reorderFromDom(listType, listEl){
   const map = new Map(list.map(item=>[item.id, item]));
   const reordered = ids.map(id=>map.get(id)).filter(Boolean);
   list.forEach(item=>{ if(!ids.includes(item.id)) reordered.push(item); });
-  if(listType === 'tasks'){ tasks = reordered; saveTasks(); renderTasks(); }
+  if(listType === 'tasks'){ setActiveTasks(reordered); saveTasks(); renderTasks(); }
   else if(listType === 'shortBreaks'){ breaks.short = reordered; saveBreaks(); renderBreaks(); }
   else if(listType === 'longBreaks'){ breaks.long = reordered; saveBreaks(); renderBreaks(); }
   updateActiveTaskDisplay();
 }
 function setupSortable(){
-  if(isTouchDevice()) return;
   if(!hasSortable()) return;
   if($taskList){
     Sortable.create($taskList, {
@@ -429,7 +675,7 @@ function getDragData(event){
   catch(e){ return null; }
 }
 function getListByType(listType){
-  if(listType === 'tasks') return tasks;
+  if(listType === 'tasks') return getActiveTasks();
   if(listType === 'shortBreaks') return breaks.short;
   if(listType === 'longBreaks') return breaks.long;
   return null;
@@ -483,8 +729,10 @@ function setupDragHandlers(li, listType, index){
   li.querySelectorAll('button').forEach(btn=>{ btn.draggable = false; });
 }
 function renderTasks(){
+  renderTaskSheets();
   $taskList.innerHTML='';
-  tasks.forEach((t)=>{
+  const activeTasks = getActiveTasks();
+  activeTasks.forEach((t, index)=>{
     const card = document.createElement('div');
     card.className = 'task-card';
     card.dataset.id = t.id;
@@ -496,45 +744,171 @@ function renderTasks(){
     
     const stat = document.createElement('div');
     stat.className = 'task-card-stat';
-    stat.textContent = `${t.completed || 0}/${t.target || 1}`;
+    stat.textContent = `Done: ${t.completed || 0}`;
+
+    const pomosLabel = document.createElement('div');
+    pomosLabel.className = 'task-card-pomos';
+    pomosLabel.textContent = `Pomos: ${t.target || 1}`;
+
+    if(cardEditMode){
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'card-corner-btn corner-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        editTask(t.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'card-corner-btn corner-delete';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        deleteTask(t.id);
+      });
+
+      const moveBtn = document.createElement('button');
+      moveBtn.type = 'button';
+      moveBtn.className = 'card-corner-btn corner-move';
+      moveBtn.textContent = 'Move';
+      moveBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        moveTaskToSheetPrompt(t.id);
+      });
+
+      card.appendChild(editBtn);
+      card.appendChild(deleteBtn);
+      card.appendChild(moveBtn);
+    }
     
     card.appendChild(title);
     card.appendChild(stat);
+    card.appendChild(pomosLabel);
     
     card.addEventListener('click', ()=>{ selectTask(t.id); });
+    setupDragHandlers(card, 'tasks', index);
     $taskList.appendChild(card);
   });
   updateActiveTaskDisplay();
-  updateDeleteButton();
+  renderPomoStatsPanel();
 }
 
-function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; tasks.unshift(t); saveTasks(); renderTasks(); }
+function addTask(title){ const id=Date.now().toString(); const t={id,title,target:1,completed:0}; const activeTasks = getActiveTasks(); activeTasks.unshift(t); saveTasks(); renderTasks(); }
 function deleteTask(id){
-  const t = tasks.find(x=>x.id===id);
+  const activeTasks = getActiveTasks();
+  const t = activeTasks.find(x=>x.id===id);
   if(!t) return;
   const confirmed = confirm(`Delete task "${t.title}"? It will be removed, but the completed count will be preserved.`);
   if(!confirmed) return;
-  tasks = tasks.filter(x=>x.id!==id);
+  setActiveTasks(activeTasks.filter(x=>x.id!==id));
   if(activeTaskId===id) activeTaskId=null;
+  syncActiveTaskToSheet();
   saveTasks();
   renderTasks();
 }
-function updateDeleteButton(){
-  const $deleteBtn = document.getElementById('deleteTaskBtn');
-  if(!$deleteBtn) return;
-  if(activeTaskId){
-    $deleteBtn.style.display = 'block';
-  } else {
-    $deleteBtn.style.display = 'none';
+function editTask(id){
+  const task = getActiveTasks().find(x=>x.id===id);
+  if(!task) return;
+  const newTitle = prompt('Edit task title:', task.title);
+  if(newTitle === null) return;
+  const trimmedTitle = newTitle.trim();
+  if(!trimmedTitle) return;
+  if(trimmedTitle.length > 50){
+    alert('Task title is over 50 characters. Please shorten it.');
+    return;
   }
+  const currentTarget = Number(task.target || 1);
+  const newTargetRaw = prompt('Edit pomodoro target count:', String(currentTarget));
+  if(newTargetRaw === null) return;
+  const parsed = parseInt(newTargetRaw, 10);
+  const nextTarget = Number.isFinite(parsed) ? Math.max(1, parsed) : currentTarget;
+  task.title = trimmedTitle;
+  task.target = nextTarget;
+  saveTasks();
+  renderTasks();
 }
-function changeTarget(id, delta){ const t = tasks.find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
+function moveTaskToSheetPrompt(taskId){
+  if(taskSheets.length < 2){
+    alert('Create another sheet first to move tasks.');
+    return;
+  }
+  const sourceSheet = getActiveTaskSheet();
+  if(!sourceSheet) return;
+  const sourceTasks = sourceSheet.tasks || [];
+  const taskIndex = sourceTasks.findIndex(task=>task.id===taskId);
+  if(taskIndex < 0) return;
+  const destinations = taskSheets.filter(sheet=>sheet.id !== sourceSheet.id);
+  if(destinations.length === 0) return;
+  const destinationText = destinations.map((sheet, index)=>`${index + 1}. ${sheet.name}`).join('\n');
+  const choice = prompt(`Move task to which sheet?\n${destinationText}`, '1');
+  if(choice === null) return;
+  const destinationIndex = parseInt(choice, 10) - 1;
+  if(!Number.isFinite(destinationIndex) || destinationIndex < 0 || destinationIndex >= destinations.length){
+    alert('Invalid choice.');
+    return;
+  }
+  const destinationSheet = destinations[destinationIndex];
+  const [task] = sourceTasks.splice(taskIndex, 1);
+  destinationSheet.tasks.unshift(task);
+  if(sourceSheet.activeTaskId === taskId){
+    sourceSheet.activeTaskId = null;
+    activeTaskId = null;
+  }
+  syncActiveTaskToSheet();
+  saveTasks();
+  renderTasks();
+  showToast(`Moved to ${destinationSheet.name}.`);
+}
+
+function validateTaskTitleLength(){
+  if(!$taskTitle || !$taskTitleWarning) return true;
+  const tooLong = $taskTitle.value.trim().length > 50;
+  $taskTitleWarning.style.display = tooLong ? 'block' : 'none';
+  return !tooLong;
+}
+
+function editBreakItem(type, id){
+  const list = type === 'short' ? breaks.short : breaks.long;
+  const item = list.find(x=>x.id===id);
+  if(!item) return;
+  const newText = prompt('Edit break item name:', item.text);
+  if(newText === null) return;
+  const trimmedText = newText.trim();
+  if(!trimmedText) return;
+  const currentTarget = Number(item.target || 1);
+  const newTargetRaw = prompt('Edit break target count:', String(currentTarget));
+  if(newTargetRaw === null) return;
+  const parsed = parseInt(newTargetRaw, 10);
+  const nextTarget = Number.isFinite(parsed) ? Math.max(1, parsed) : currentTarget;
+  item.text = trimmedText;
+  item.target = nextTarget;
+  saveBreaks();
+  renderBreaks();
+  updateActiveTaskDisplay();
+}
+
+function toggleCardEditMode(){
+  cardEditMode = !cardEditMode;
+  updateEditModeButton();
+  renderTasks();
+  renderBreaks();
+}
+
+function updateEditModeButton(){
+  const $editModeBtn = document.getElementById('editModeBtn');
+  const $editModeBtnBreak = document.getElementById('editModeBtnBreak');
+  if($editModeBtn) $editModeBtn.textContent = cardEditMode ? 'Done' : 'Edit';
+  if($editModeBtnBreak) $editModeBtnBreak.textContent = cardEditMode ? 'Done' : 'Edit';
+}
+function changeTarget(id, delta){ const t = getActiveTasks().find(x=>x.id===id); if(!t) return; t.target = Math.max(1, (t.target||1) + delta); saveTasks(); renderTasks(); }
 function changeBreakTarget(type, id, delta){ const breaks_arr = type === 'short' ? breaks.short : breaks.long; const item = breaks_arr.find(x=>x.id===id); if(!item) return; item.target = Math.max(1, (item.target||1) + delta); saveBreaks(); renderBreaks(); }
-function selectTask(id){ activeTaskId = id; saveTasks(); renderTasks(); updateActiveTaskDisplay(); }
+function selectTask(id){ activeTaskId = id; syncActiveTaskToSheet(); saveTasks(); renderTasks(); updateActiveTaskDisplay(); }
 function updateActiveTaskDisplay(){ 
   if(currentMode === 'pomodoro'){
     if(!activeTaskId){ $activeTaskDisplay.textContent='No task selected'; return } 
-    const t = tasks.find(x=>x.id===activeTaskId); 
+    const t = getActiveTasks().find(x=>x.id===activeTaskId); 
     if(!t){ $activeTaskDisplay.textContent='No task selected'; return } 
     $activeTaskDisplay.textContent = t.title
   } else if(currentMode === 'short'){
@@ -562,47 +936,177 @@ function renderBreaks(){
     setupListDropZone($longBreakList, 'longBreaks');
     $longBreakList.innerHTML='';
   }
-  breaks.short.forEach((it, index)=>{ const li=document.createElement('li');
-  li.dataset.id=it.id;
-  const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
-  const title=document.createElement('div'); title.textContent=it.text;
-  const meta=document.createElement('div'); meta.className='task-meta';
-  const targetWrap = document.createElement('div'); targetWrap.className = 'target-controls';
-  const minus = document.createElement('button'); minus.textContent = '−'; minus.title = 'Decrease target'; minus.addEventListener('click', ()=>{ changeBreakTarget('short', it.id, -1); });
-  const targetSpan = document.createElement('span'); targetSpan.textContent = `${it.completed || 0}/${it.target || 1}`;
-  const plus = document.createElement('button'); plus.textContent = '+'; plus.title = 'Increase target'; plus.addEventListener('click', ()=>{ changeBreakTarget('short', it.id, 1); });
-  targetWrap.appendChild(minus); targetWrap.appendChild(targetSpan); targetWrap.appendChild(plus);
-  meta.appendChild(targetWrap);
-  left.appendChild(title); left.appendChild(meta);
-  const actions=document.createElement('div'); actions.className='task-actions';
-  const selectBtn=document.createElement('button'); selectBtn.textContent = (it.id===activeShortBreakId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ activeShortBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.short = breaks.short.filter(x=>x.id!==it.id); if(activeShortBreakId===it.id) activeShortBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions);
-  setupDragHandlers(li, 'shortBreaks', index);
-  if($shortBreakList) $shortBreakList.appendChild(li); });
+  
+  // Render short breaks as grid cards
+  breaks.short.forEach((it, index)=>{
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.id = it.id;
+    if(it.id === activeShortBreakId) card.classList.add('selected');
+    
+    const title = document.createElement('div');
+    title.className = 'task-card-title';
+    title.textContent = it.text;
+    
+    const stat = document.createElement('div');
+    stat.className = 'task-card-stat';
+    stat.textContent = `${it.completed || 0}/${it.target || 1}`;
+
+    if(cardEditMode){
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'card-corner-btn corner-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        editBreakItem('short', it.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'card-corner-btn corner-delete';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        breaks.short = breaks.short.filter(x=>x.id!==it.id);
+        if(activeShortBreakId===it.id) activeShortBreakId=null;
+        saveBreaks();
+        renderBreaks();
+        updateActiveTaskDisplay();
+        updateFinishButtonState();
+      });
+
+      card.appendChild(editBtn);
+      card.appendChild(deleteBtn);
+    }
+    
+    card.appendChild(title);
+    card.appendChild(stat);
+    
+    card.addEventListener('click', ()=>{
+      activeShortBreakId = it.id;
+      saveBreaks();
+      renderBreaks();
+      updateActiveTaskDisplay();
+      updateFinishButtonState();
+    });
+    
+    setupDragHandlers(card, 'shortBreaks', index);
+    if($shortBreakList) $shortBreakList.appendChild(card);
+  });
+  
+  // Render long breaks as grid cards
   if(!$longBreakList) return;
-  breaks.long.forEach((it, index)=>{ const li=document.createElement('li');
-  li.dataset.id=it.id;
-  const left=document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
-  const title=document.createElement('div'); title.textContent=it.text;
-  const meta=document.createElement('div'); meta.className='task-meta';
-  const targetWrap = document.createElement('div'); targetWrap.className = 'target-controls';
-  const minus = document.createElement('button'); minus.textContent = '−'; minus.title = 'Decrease target'; minus.addEventListener('click', ()=>{ changeBreakTarget('long', it.id, -1); });
-  const targetSpan = document.createElement('span'); targetSpan.textContent = `${it.completed || 0}/${it.target || 1}`;
-  const plus = document.createElement('button'); plus.textContent = '+'; plus.title = 'Increase target'; plus.addEventListener('click', ()=>{ changeBreakTarget('long', it.id, 1); });
-  targetWrap.appendChild(minus); targetWrap.appendChild(targetSpan); targetWrap.appendChild(plus);
-  meta.appendChild(targetWrap);
-  left.appendChild(title); left.appendChild(meta);
-  const actions=document.createElement('div'); actions.className='task-actions';
-  const selectBtn=document.createElement('button'); selectBtn.textContent = (it.id===activeLongBreakId)?'Active':'Select';
-  selectBtn.addEventListener('click', ()=>{ activeLongBreakId = it.id; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  const del=document.createElement('button'); del.textContent='Delete'; del.addEventListener('click', ()=>{ breaks.long = breaks.long.filter(x=>x.id!==it.id); if(activeLongBreakId===it.id) activeLongBreakId=null; saveBreaks(); renderBreaks(); updateActiveTaskDisplay(); updateFinishButtonState(); });
-  actions.appendChild(selectBtn); actions.appendChild(del);
-  li.appendChild(left); li.appendChild(actions);
-  setupDragHandlers(li, 'longBreaks', index);
-  $longBreakList.appendChild(li); }); }
+  breaks.long.forEach((it, index)=>{
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.id = it.id;
+    if(it.id === activeLongBreakId) card.classList.add('selected');
+    
+    const title = document.createElement('div');
+    title.className = 'task-card-title';
+    title.textContent = it.text;
+    
+    const stat = document.createElement('div');
+    stat.className = 'task-card-stat';
+    stat.textContent = `${it.completed || 0}/${it.target || 1}`;
+
+    if(cardEditMode){
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'card-corner-btn corner-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        editBreakItem('long', it.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'card-corner-btn corner-delete';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (event)=>{
+        event.stopPropagation();
+        breaks.long = breaks.long.filter(x=>x.id!==it.id);
+        if(activeLongBreakId===it.id) activeLongBreakId=null;
+        saveBreaks();
+        renderBreaks();
+        updateActiveTaskDisplay();
+        updateFinishButtonState();
+      });
+
+      card.appendChild(editBtn);
+      card.appendChild(deleteBtn);
+    }
+    
+    card.appendChild(title);
+    card.appendChild(stat);
+    
+    card.addEventListener('click', ()=>{
+      activeLongBreakId = it.id;
+      saveBreaks();
+      renderBreaks();
+      updateActiveTaskDisplay();
+      updateFinishButtonState();
+    });
+    
+    setupDragHandlers(card, 'longBreaks', index);
+    $longBreakList.appendChild(card);
+  });
+  renderPomoStatsPanel();
+}
+
+function showStatsSection(section){
+  const tasksSection = document.getElementById('tasksSection');
+  const pomosSection = document.getElementById('pomosSection');
+  const timeSection = document.getElementById('timeSection');
+  if(tasksSection) tasksSection.style.display = section === 'tasks' ? 'block' : 'none';
+  if(pomosSection) pomosSection.style.display = section === 'pomos' ? 'block' : 'none';
+  if(timeSection) timeSection.style.display = section === 'time' ? 'block' : 'none';
+}
+
+function renderPomoStatsPanel(){
+  const tasksCountEl = document.getElementById('tasksCount');
+  const tasksPanelList = document.getElementById('tasksPanelList');
+  const completedList = document.getElementById('completedList');
+  const totalPomoTimeEl = document.getElementById('totalPomoTime');
+  const timeBreakdownEl = document.getElementById('timeBreakdown');
+
+  const trackedTasks = getAllTasks().filter(t => (t.completed || 0) > 0);
+  if(tasksCountEl) tasksCountEl.textContent = String(trackedTasks.length);
+  if(tasksPanelList){
+    tasksPanelList.innerHTML = '';
+    trackedTasks.forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = `${t.title}: ${t.completed || 0}/${t.target || 1}`;
+      tasksPanelList.appendChild(li);
+    });
+  }
+
+  const pomoEvents = sessionHistory.filter(e => e.type === 'pomodoro');
+  if(completedList){
+    completedList.innerHTML = '';
+    pomoEvents.forEach(e => {
+      const li = document.createElement('li');
+      li.textContent = `${e.title || 'Pomodoro'} • ${formatDuration(e.duration || 0)}`;
+      completedList.appendChild(li);
+    });
+  }
+
+  const totalPomodoroSeconds = pomoEvents.reduce((sum, e) => sum + (e.duration || 0), 0);
+  const totalBreakSeconds = sessionHistory
+    .filter(e => e.type === 'break')
+    .reduce((sum, e) => sum + (e.duration || 0), 0);
+
+  if(totalPomoTimeEl) totalPomoTimeEl.textContent = `${Math.floor(totalPomodoroSeconds / 60)}m`;
+  if(timeBreakdownEl){
+    timeBreakdownEl.innerHTML = `
+      <div>Pomodoro: ${formatDuration(totalPomodoroSeconds)}</div>
+      <div>Break: ${formatDuration(totalBreakSeconds)}</div>
+      <div>Total: ${formatDuration(totalPomodoroSeconds + totalBreakSeconds)}</div>
+    `;
+  }
+}
 
 // Budget persistence (pomodoro, short, long counts)
 function loadBudgets(){ try{ const raw=localStorage.getItem(BUDGETS_KEY); budgets = raw ? JSON.parse(raw) : {pomodoro:0,short:0,long:0}; }catch(e){ budgets={pomodoro:0,short:0,long:0}; } renderBudgets(); }
@@ -630,20 +1134,43 @@ function resetPomoPours(){ pourCounts.pomodoro = 0; savePours(); renderPours(); 
 function resetBreakPours(){ pourCounts.break = 0; savePours(); renderPours(); }
 
 // Hook up forms
+if($taskSheetSelect){
+  $taskSheetSelect.addEventListener('change', (event)=>{
+    setActiveTaskSheet(event.target.value);
+  });
+}
+if($addTaskSheetBtn){
+  $addTaskSheetBtn.addEventListener('click', createTaskSheetPrompt);
+}
+if($renameTaskSheetBtn){
+  $renameTaskSheetBtn.addEventListener('click', renameTaskSheetPrompt);
+}
+if($deleteTaskSheetBtn){
+  $deleteTaskSheetBtn.addEventListener('click', deleteTaskSheetPrompt);
+}
+
 $taskForm.addEventListener('submit', (e)=>{
   e.preventDefault();
-  if(activeTaskId) return;
   const t=$taskTitle.value.trim();
   if(!t) return;
+  if(!validateTaskTitleLength()) return;
   addTask(t);
   $taskTitle.value='';
+  validateTaskTitleLength();
 });
 
-const $deleteTaskBtn = document.getElementById('deleteTaskBtn');
-if($deleteTaskBtn){
-  $deleteTaskBtn.addEventListener('click', ()=>{
-    if(activeTaskId){ deleteTask(activeTaskId); }
-  });
+if($taskTitle){
+  $taskTitle.addEventListener('input', validateTaskTitleLength);
+}
+
+const $editModeBtn = document.getElementById('editModeBtn');
+if($editModeBtn){
+  $editModeBtn.addEventListener('click', toggleCardEditMode);
+}
+
+const $editModeBtnBreak = document.getElementById('editModeBtnBreak');
+if($editModeBtnBreak){
+  $editModeBtnBreak.addEventListener('click', toggleCardEditMode);
 }
 
 if($shortBreakForm && $shortBreakInput){ $shortBreakForm.addEventListener('submit',(e)=>{ e.preventDefault(); const v=$shortBreakInput.value.trim(); if(!v) return; breaks.short.push({id:Date.now().toString(),text:v,target:1,completed:0}); saveBreaks(); renderBreaks(); $shortBreakInput.value=''; }); }
@@ -663,14 +1190,66 @@ if($shortInc) $shortInc.addEventListener('click', ()=>{ budgets.short++; saveBud
 if($longDec) $longDec.addEventListener('click', ()=>{ budgets.long = Math.max(0, budgets.long-1); saveBudgets(); renderBudgets(); });
 if($longInc) $longInc.addEventListener('click', ()=>{ budgets.long++; saveBudgets(); renderBudgets(); });
 
+const $pomoStatsToggle = document.getElementById('pomoStatsToggle');
+const $pomoStatsPanel = document.getElementById('pomoStatsPanel');
+const $statsTasksBtn = document.getElementById('statsTasksBtn');
+const $statsPomosBtn = document.getElementById('statsPomosBtn');
+const $statsTimeBtn = document.getElementById('statsTimeBtn');
+const $resetTasksBtn = document.getElementById('resetTasksBtn');
+const $resetPomosBtn = document.getElementById('resetPomosBtn');
+const $resetTimeBtn = document.getElementById('resetTimeBtn');
+
+if($pomoStatsToggle && $pomoStatsPanel){
+  $pomoStatsToggle.addEventListener('click', ()=>{
+    const open = $pomoStatsPanel.style.display !== 'none';
+    $pomoStatsPanel.style.display = open ? 'none' : 'block';
+    if(!open){
+      renderPomoStatsPanel();
+      showStatsSection('tasks');
+    }
+  });
+}
+
+if($statsTasksBtn) $statsTasksBtn.addEventListener('click', ()=> showStatsSection('tasks'));
+if($statsPomosBtn) $statsPomosBtn.addEventListener('click', ()=> showStatsSection('pomos'));
+if($statsTimeBtn) $statsTimeBtn.addEventListener('click', ()=> showStatsSection('time'));
+
+if($resetTasksBtn){
+  $resetTasksBtn.addEventListener('click', ()=>{
+    taskSheets.forEach(sheet=>{
+      (sheet.tasks || []).forEach(task=>{ task.completed = 0; });
+    });
+    saveTasks();
+    renderTasks();
+    renderPomoStatsPanel();
+  });
+}
+
+if($resetPomosBtn){
+  $resetPomosBtn.addEventListener('click', ()=>{
+    sessionHistory = sessionHistory.filter(e => e.type !== 'pomodoro');
+    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(sessionHistory));
+    renderPomoStatsPanel();
+  });
+}
+
+if($resetTimeBtn){
+  $resetTimeBtn.addEventListener('click', ()=>{
+    sessionHistory = sessionHistory.filter(e => e.type !== 'pomodoro');
+    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(sessionHistory));
+    renderPomoStatsPanel();
+  });
+}
+
 // When a pomodoro finishes, attribute to active task if present
 function onPomodoroFinished(){
   if(activeTaskId){
-    const t = tasks.find(x=>x.id===activeTaskId);
+    const t = getActiveTasks().find(x=>x.id===activeTaskId);
     if(t){
       t.completed = (t.completed||0) + 1;
       const actualDuration = timerState.pomodoro.duration;
       recordSessionEvent('pomodoro', t.title, actualDuration, null);
+      syncActiveTaskToSheet();
       saveTasks();
       renderTasks();
     }
@@ -705,6 +1284,7 @@ updateBreakPlusTenButton();
 loadTimerState();
 duration = timerState[currentMode].duration;
 remaining = timerState[currentMode].remaining;
+window.timerState = { remaining, duration, currentMode, isRunning };
 updateDisplay();
 document.querySelectorAll('.mode').forEach(btn=>{
   btn.classList.toggle('active', btn.dataset.mode === currentMode);
@@ -712,6 +1292,7 @@ document.querySelectorAll('.mode').forEach(btn=>{
 $status.textContent = (remaining === duration) ? 'Ready' : 'Paused';
 loadTasks(); 
 loadBreaks();
+updateEditModeButton();
 setupSortable();
 loadBudgets();
 loadPours();
@@ -814,12 +1395,13 @@ if($infoToggle && $infoSection){ $infoToggle.addEventListener('click', ()=>{ con
 
 // timer visibility toggle (available on both pages)
 const $timerToggle = document.getElementById('timerToggle');
-if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; }); }
+if($timerToggle){ $timerToggle.addEventListener('click', ()=>{ timerVisible = !timerVisible; window.timerVisible = timerVisible; document.getElementById('time').style.display = timerVisible ? 'block' : 'none'; $timerToggle.textContent = timerVisible ? 'Hide the Timer' : 'Show the Timer'; updateDisplay(); }); }
 
 if($finishTaskBtn){ $finishTaskBtn.addEventListener('click', finishCurrentItem); }
 
 // Session history/summary
 loadSessionHistory();
+renderPomoStatsPanel();
 const $printSessionBtn = document.getElementById('printSessionBtn');
 const $sessionModal = document.getElementById('sessionModal');
 const $sessionSummaryContent = document.getElementById('sessionSummaryContent');
